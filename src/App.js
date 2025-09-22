@@ -60,9 +60,9 @@ function App() {
             <Route path="/report" element={<PrivateRoute element={Report} />} />
 
 
-            <Route path="/tender" element={<PrivateRoute element={Tender} />} />
+            <Route path="/dashboard" element={<PrivateRoute element={Tender} />} />
             <Route path="/draft" element={<PrivateRoute element={Tender} />} />
-            <Route path="/create-tender" element={<PrivateRoute element={Tender} />} />
+            <Route path="/create-job-card" element={<PrivateRoute element={Tender} />} />
             <Route path="/edit-draft/:ActivityId" element={<PrivateRoute element={Tender} />} />
             <Route path="/tender/view/:activityId" element={<PrivateRoute element={ViewTender} />} />
             <Route path="/loa/view/:activityId" element={<PrivateRoute element={ViewLOA} />} />

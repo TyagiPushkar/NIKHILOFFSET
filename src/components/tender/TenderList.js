@@ -115,38 +115,17 @@ function TenderList() {
   return (
     <div className="tender-list-container">
       <div className="tender-list-header">
-        <h2 className="tender-list-title">Tender List</h2>
-
+        
         <div className="tender-list-actions">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search by Tender No. or Buyer Name"
-              value={searchTerm}
-              onChange={handleSearch}
-              className="search-input"
-            />
-            <span className="search-icon">🔍</span>
-          </div>
-          <button
-            onClick={exportToExcel}
-            className="action-button"
-            style={{ backgroundColor: "#344C7D" }}
-            title="Export to Excel"
-          >
-            📊 Export to Excel
-          </button>
-          <button
-            className="action-button draft-button"
-            onClick={() => navigate("/draft")}
-          >
-            Drafts
-          </button>
+
+        <h2 className="tender-list-title">Job Card List</h2>
+
+
           <button
             className="action-button new-tender-button"
-            onClick={() => navigate("/create-tender")}
+            onClick={() => navigate("/create-job-card")}
           >
-            New Tender
+            New Job Card
           </button>
         </div>
       </div>

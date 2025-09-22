@@ -815,7 +815,7 @@ useEffect(() => {
     <Container maxWidth="md" sx={{ mt: 2, mb: 4 }}>
       <Box
         sx={{
-          background: "linear-gradient(to right, #344C7D, #FFC107)",
+          background: "linear-gradient(to right, #EA4096, #EA4096)",
           color: "white",
           p: 2,
           borderRadius: 1,
@@ -825,7 +825,7 @@ useEffect(() => {
         }}
       >
         <Typography variant="h5" fontWeight="bold">
-          {currentPage >= 3 ? "Letter Of Allotment" : "Tender Application Form"}
+          {currentPage >= 3 ? "NIKHIL OFFSET" : "NIKHIL OFFSET"}
         </Typography>
         <Typography variant="body2">
           {currentPage >= 3 ? "Please complete the Letter Of Allotment details" : "Please complete all sections"}
@@ -852,11 +852,7 @@ useEffect(() => {
         ))}
       </Stepper>
 
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Step {currentPage + 1} of {pages.length}
-        </Typography>
-      </Box>
+      
 
       <Box sx={{ mb: 3 }}>
         {pageData.map((id) => {
@@ -870,7 +866,11 @@ useEffect(() => {
           return renderCheckpointWithDependents(cp, pageData)
         })}
       </Box>
-
+<Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Step {currentPage + 1} of {pages.length}
+        </Typography>
+      </Box>
       <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 3 }}>
         {currentPage > 0 && (
           <Button
