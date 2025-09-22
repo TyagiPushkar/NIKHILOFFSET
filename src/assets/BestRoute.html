@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimized Route Finder (TSP)</title>
+    <!-- Load Google Maps API with geometry library -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtEmyBwz_YotZK8Iabl_nQQldaAtN0jhM&libraries=geometry"></script>
+    <style>
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+
+        #controls {
+            margin: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="controls">
+        <h3>Optimized Route Finder (TSP)</h3>
+        <p>Route between: <strong>Location A</strong>, <strong>Location B</strong>, <strong>Location C</strong>,
+            <strong>Location D</strong>
+        </p>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        // Coordinates for A, B, C, D
+        const locations = [
+            { lat: 28.5207879, lng: 77.3840205 }, // Location A
+            { lat: 28.5214735, lng: 77.3836481 }, // Location B
+            { lat: 28.5217441, lng: 77.3835673 }, // Location C
+            { lat: 28.5231473, lng: 77.3832253 }  // Location D
+        ];
+
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 13,
+                center: locations[0],  // Center on the first location
+            });
+
+            // Directions service and renderer
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            // Create markers for each location
+            locations.forEach(location => {
+                new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: `Lat: ${location.lat}, Lng: ${location.lng}`
+                });
+            });
+
+            // Create a distance matrix
+            const distanceMatrix = getDistanceMatrix(locations);
+
+            // Find the best route using greedy approximation
+            const bestRoute = findBestRoute(distanceMatrix);
+
+            // Create waypoints for the route
+            const waypoints = bestRoute.map(index => ({
+                location: locations[index],
+                stopover: true
+            }));
+
+            const origin = locations[bestRoute[0]];
+            const destination = locations[bestRoute[bestRoute.length - 1]];
+
+            // Request directions
+            directionsService.route(
+                {
+                    origin: origin,
+                    destination: destination,
+                    waypoints: waypoints,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                },
+                (response, status) => {
+                    if (status === "OK") {
+                        directionsRenderer.setDirections(response);
+                    } else {
+                        alert("Directions request failed due to " + status);
+                    }
+                }
+            );
+        }
+
+        // Function to calculate the distance matrix (Brute Force)
+        function getDistanceMatrix(locations) {
+            const matrix = [];
+            for (let i = 0; i < locations.length; i++) {
+                const row = [];
+                for (let j = 0; j < locations.length; j++) {
+                    const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                        new google.maps.LatLng(locations[i].lat, locations[i].lng),
+                        new google.maps.LatLng(locations[j].lat, locations[j].lng)
+                    );
+                    row.push(distance);
+                }
+                matrix.push(row);
+            }
+            return matrix;
+        }
+
+        // Function to find the best route using a simple nearest-neighbor approach
+        function findBestRoute(matrix) {
+            const unvisited = Array.from({ length: matrix.length }, (_, i) => i);
+            const route = [];
+            let currentNode = 0; // Start at the first location
+            route.push(currentNode);
+            unvisited.splice(unvisited.indexOf(currentNode), 1);
+
+            while (unvisited.length > 0) {
+                let closestNode = -1;
+                let closestDistance = Infinity;
+                for (let i = 0; i < unvisited.length; i++) {
+                    const node = unvisited[i];
+                    if (matrix[currentNode][node] < closestDistance) {
+                        closestNode = node;
+                        closestDistance = matrix[currentNode][node];
+                    }
+                }
+                route.push(closestNode);
+                unvisited.splice(unvisited.indexOf(closestNode), 1);
+                currentNode = closestNode;
+            }
+
+            return route;
+        }
+
+        // Initialize the map
+        window.onload = initMap;
+    </script>
+</body>
+
+</html>

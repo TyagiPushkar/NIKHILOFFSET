@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="https://namami-infotech.com/PrivacyPolicy/HRSmileLogo.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR SMILE - Demo Request </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="h-screen flex flex-col">
+        <!-- Minimal Navigation -->
+        <nav class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <img src="https://namami-infotech.com/PrivacyPolicy/HRSmileLogo.jpeg" style="width: 60px;"
+                            alt="">
+                        <span class="ml-2 text-xl font-semibold">HR SMILE</span>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="https://namami-infotech.com/services/"
+                            class="text-gray-600 hover:text-blue-600 transition">Features</a>
+                        <a href="#" class="text-gray-600 hover:text-blue-600 transition">Pricing</a>
+                        <a href="#" class="text-gray-600 hover:text-blue-600 transition">About</a>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                            style="background-color: #344C7D;">
+                            Get Started
+                        </button>
+                    </div>
+                    <button class="md:hidden text-gray-600" id="mobileMenuBtn">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile Menu -->
+            <div class="md:hidden hidden" id="mobileMenu">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="https://namami-infotech.com/services/" class="block px-3 py-2 text-gray-600">Features</a>
+                    <a href="#" class="block px-3 py-2 text-gray-600">Pricing</a>
+                    <a href="#" class="block px-3 py-2 text-gray-600">About</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex-1 container mx-auto px-4 py-6">
+            <div class="grid md:grid-cols-2 gap-6 items-center max-w-5xl mx-auto">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                    <h2 class="text-3xl font-bold text-gray-900">Experience Next-Gen HR Management</h2>
+                    <div class="video-container">
+                        <video autoplay loop muted playsinline>
+                            <source src="https://namami-infotech.com/PrivacyPolicy/Demo.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <p class="text-gray-600">Streamline your HR processes with our intelligent HRMS solution.</p>
+                </div>
+
+                <!-- Right Column - Compact Form -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Request Demo</h2>
+                    <form id="demoForm" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <input type="text" placeholder="Full Name" id="name" required
+                                    class="w-full px-3 py-2 text-sm border rounded focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <input type="email" placeholder="Work Email" id="email" required
+                                    class="w-full px-3 py-2 text-sm border rounded focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <input type="text" placeholder="Mobile Number" id="number" required
+                                    class="w-full px-3 py-2 text-sm border rounded focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <input type="text" placeholder="Company Name" id="company" required
+                                    class="w-full px-3 py-2 text-sm border rounded focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <select id="companySize"
+                                    class="w-full px-3 py-2 text-sm border rounded focus:ring-1 focus:ring-blue-500">
+                                    <option value="">Company Size</option>
+                                    <option>1-50</option>
+                                    <option>51-200</option>
+                                    <option>201+</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+                            style="background-color: #344C7D;">
+                            Schedule Demo
+                        </button>
+                        <p class="text-xs text-gray-500 text-center">
+                            We'll get back to you within 24 hours
+                        </p>
+                        <p class="text-center mt-4">
+                            <a href="https://namami-infotech.com/PrivacyPolicy/account-deletion.html"
+                                class="text-sm text-blue-600 hover:underline">
+                                Delete Your Account?
+                            </a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Form submission
+        document.getElementById('demoForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const number = document.getElementById('number').value;
+            const company = document.getElementById('company').value;
+            const companySize = document.getElementById('companySize').value;
+
+            // Prepare the data to be sent to the API
+            const formData = {
+                name: name,
+                email: email,
+                number: number,
+                company: company,
+                company_size: companySize
+            };
+
+            // Get the button element and change its state to loading
+            const submitButton = this.querySelector('button');
+            submitButton.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i> Loading...';  // Show loading spinner
+            submitButton.disabled = true;  // Disable the button to prevent multiple submissions
+
+            // Send data to the backend using fetch API
+            fetch('https://namami-infotech.com/NIKHILOFFSET/src/Demo/Demo.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        const formContent = this.innerHTML;
+                        this.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="bi bi-check-circle text-5xl text-green-500 mb-4"></i>
+                            <h3 class="text-xl font-bold mb-2">Thank You!</h3>
+                            <p class="text-gray-600">We'll contact you shortly to schedule your demo.</p>
+                        </div>
+                    `;
+
+                        // Reset form after 3 seconds
+                        setTimeout(() => {
+                            this.innerHTML = formContent;
+                            this.reset();
+                        }, 3000);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Something went wrong. Please try again later.');
+                })
+                .finally(() => {
+                    // Enable the button again after the process
+                    submitButton.innerHTML = 'Schedule Demo';
+                    submitButton.disabled = false;
+                });
+        });
+    </script>
+
+</body>
+
+</html>
