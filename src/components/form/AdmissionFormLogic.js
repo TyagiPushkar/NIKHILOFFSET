@@ -282,7 +282,7 @@ useEffect(() => {
 
     if (type.toLowerCase().includes("header")) {
       return (
-        <Typography variant="h6" sx={{ mt: 3, mb: 1, textAlign: "center", color: "#344C7D", fontWeight: "bold" }}>
+        <Typography variant="h6" sx={{ mt: 0, mb: 0, textAlign: "center", color: "#344C7D", fontWeight: "bold" }}>
           {cp.Description}
         </Typography>
       )
@@ -812,7 +812,7 @@ useEffect(() => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 2, mb: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 0, mb: 4 }}>
       <Box
         sx={{
           background: "linear-gradient(to right, #EA4096, #EA4096)",
@@ -827,12 +827,12 @@ useEffect(() => {
         <Typography variant="h5" fontWeight="bold">
           {currentPage >= 3 ? "NIKHIL OFFSET" : "NIKHIL OFFSET"}
         </Typography>
-        <Typography variant="body2">
+        {/* <Typography variant="body2">
           {currentPage >= 3 ? "Please complete the Letter Of Allotment details" : "Please complete all sections"}
-        </Typography>
+        </Typography> */}
       </Box>
 
-      <Stepper
+      {/* <Stepper
         activeStep={currentPage}
         alternativeLabel
         sx={{
@@ -850,7 +850,7 @@ useEffect(() => {
             <StepLabel>Step {index + 1}</StepLabel>
           </Step>
         ))}
-      </Stepper>
+      </Stepper> */}
 
       
 
@@ -891,7 +891,7 @@ useEffect(() => {
 
         {currentPage === pages.length - 1 ? (
           <>
-            <Button
+            {/* <Button
               variant="contained"
               sx={{
                 backgroundColor: "#757575",
@@ -904,7 +904,7 @@ useEffect(() => {
               onClick={() => handleSubmit(true)}
             >
               Save Draft
-            </Button>
+            </Button> */}
             <Button
               variant="contained"
               sx={{
@@ -912,7 +912,7 @@ useEffect(() => {
                 color: "white",
                 minWidth: "120px",
                 "&:hover": {
-                  backgroundColor: "#e08416",
+                  backgroundColor: "#EA4096",
                 },
               }}
               onClick={() => handleSubmit(false)}
@@ -928,7 +928,7 @@ useEffect(() => {
               color: "white",
               minWidth: "120px",
               "&:hover": {
-                backgroundColor: "#e08416",
+                backgroundColor: "#EA4096",
               },
             }}
             onClick={handleNext}
