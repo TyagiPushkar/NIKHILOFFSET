@@ -48,7 +48,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await axios.post(`${API_URL}/login.php`, {
+      const response = await axios.post(`${API_URL}/web_login.php`, {
         EmpId: empId,
         password: password,
       });

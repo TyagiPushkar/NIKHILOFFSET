@@ -2,40 +2,52 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
 
+function isMobileDevice() {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  return /android|ipad|iphone|ipod/i.test(ua);
+}
+
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // Loading state to handle initialization
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); 
 
-    useEffect(() => {
-        // Load user from localStorage on initialization
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser)); 
-            } catch (error) {
-                console.error("Failed to parse stored user data:", error);
-            }
-        }
-        setLoading(false); // Set loading to false after checking localStorage
-    }, []);
+  useEffect(() => {
+    if (isMobileDevice()) {
+      // 🚀 Auto-login on phone screens
+      setUser({ name: "Mobile Guest" });
+      setLoading(false);
+      return;
+    }
 
-    const login = (userData) => {
-        localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
-    };
+    // Web browser → require auth
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse stored user data:", error);
+      }
+    }
+    setLoading(false);
+  }, []);
 
-    const logout = () => {
-        localStorage.removeItem('user');
-        setUser(null);
-    };
+  const login = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
 
-    return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  const logout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }

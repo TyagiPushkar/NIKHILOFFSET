@@ -27,6 +27,7 @@ import Invoices from './pages/Invoices';
 import AMCWork from './pages/AMCWork';
 import Report from './pages/Report';
 import SummaryReport from './pages/Summary';
+import Dashboard from './pages/Dashboard';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -46,7 +47,8 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<PrivateRoute element={User} />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/employees" element={<PrivateRoute element={Employee} />} />
             <Route path="/employees/:empId" element={<PrivateRoute element={EmployeeProfile} requiredRole="HR" />} />
             <Route path="/holiday" element={<PrivateRoute element={Holiday} />} />
@@ -55,7 +57,6 @@ function App() {
             <Route path="/notification" element={<PrivateRoute element={Notification} />} />
             <Route path="/leave" element={<PrivateRoute element={Leave} />} />
             <Route path="/profile" element={<PrivateRoute element={User} />} />
-            <Route path="/dashboard" element={<PrivateRoute element={User} />} />
 
             <Route path="/summary" element={<PrivateRoute element={SummaryReport} />} />
             <Route path="/report" element={<PrivateRoute element={Report} />} />
