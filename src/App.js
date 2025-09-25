@@ -55,12 +55,13 @@ function App() {
             <Route path="/notification" element={<PrivateRoute element={Notification} />} />
             <Route path="/leave" element={<PrivateRoute element={Leave} />} />
             <Route path="/profile" element={<PrivateRoute element={User} />} />
+            <Route path="/dashboard" element={<PrivateRoute element={User} />} />
 
             <Route path="/summary" element={<PrivateRoute element={SummaryReport} />} />
             <Route path="/report" element={<PrivateRoute element={Report} />} />
 
 
-            <Route path="/dashboard" element={<PrivateRoute element={Tender} />} />
+            <Route path="/job-card-list" element={<PrivateRoute element={Tender} />} />
             <Route path="/draft" element={<PrivateRoute element={Tender} />} />
             <Route path="/create-job-card" element={<PrivateRoute element={Tender} />} />
             <Route path="/edit-draft/:ActivityId" element={<PrivateRoute element={Tender} />} />

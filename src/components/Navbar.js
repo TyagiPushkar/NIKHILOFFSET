@@ -153,7 +153,36 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             }}
           />
         </ListItem>
-
+<ListItem
+          button
+          component={Link}
+          to="/job-card-list"
+          selected={location.pathname === "/job-card-list"}
+          sx={{
+            borderRadius: "10px",
+            mb: 1,
+            color: location.pathname === "/job-card-list" ? "#344C7D" : "#666",
+            backgroundColor: location.pathname === "/job-card-list" ? "rgba(246, 147, 32, 0.08)" : "transparent",
+            "&:hover": {
+              backgroundColor: location.pathname === "/job-card-list" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+            },
+            transition: "all 0.2s ease",
+          }}
+        >
+          <Dashboard
+            sx={{
+              mr: 2,
+              color: "inherit",
+              fontSize: "1.2rem",
+            }}
+          />
+          <ListItemText
+            primary="Job Card List"
+            primaryTypographyProps={{
+              fontWeight: location.pathname === "/job-card-list" ? 600 : 500,
+            }}
+          />
+        </ListItem>
         <ListItem
           button
           component={Link}

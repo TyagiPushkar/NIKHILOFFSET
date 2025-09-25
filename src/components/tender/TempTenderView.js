@@ -46,10 +46,8 @@ const StyledHeader = ({ children, ...props }) => {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "15px 20px",
-    marginBottom: "20px",
+    marginTop:"-30px",
     borderRadius: "12px",
-    background: "linear-gradient(135deg, #fff8e1 0%, #fffde7 100%)",
-    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.05)",
     position: "relative",
     overflow: "hidden",
     ...props.style,
@@ -498,14 +496,11 @@ function TempTenderView() {
 
   // Checkpoint groups
   const sections = {
-    "Tender Published Details": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-    "TENDER PARTICIPATED BY SWCL": [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
-    "TENDER OPENED DETAILS": [
-      31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
-    ],
-    "LOA AWARDED TO SWCL": [
-      59, 60, 126,61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 105, 104, 111
-    ],
+    "Job Card": [1,2,3,4,5,6,7,8,9,10],
+    "PRE PRESS": [11,12,13,14,15,16,17,18,19,20],
+    "CUTTING": [21,22,23,24,25,26,27,28,29,30],
+    "PRINTING": [31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
+    "POST PRESS":[41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
   }
 
   const candidateDetailsIds = [2, 4, 5, 7, 6, 18]
@@ -728,7 +723,7 @@ function TempTenderView() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "15px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <Award size={20} color="#344C7D" style={{ marginRight: "10px" }} />
-            <StyledTitle level={2}>Tender Details</StyledTitle>
+            <StyledTitle level={2}>JOB CARD</StyledTitle>
           </div>
   
           {isAdmin && (
@@ -1018,14 +1013,7 @@ function TempTenderView() {
               // Skip rendering if value is null or empty
               if (!item.Value || item.Value === "") return null;
               
-              if (isPriceField) {
-                const field = {
-                  id: item.ChkId,
-                  label: getLabel(item.ChkId),
-                  value: item.Value
-                };
-                return renderPriceField(field, isEditing);
-              }
+              
               
               return (
                 <StyledFieldBox
@@ -1150,57 +1138,7 @@ const calculateGST = (amount) => {
     gstAmount: numAmount - (numAmount / 1.18)
   };
   };
-  const renderPriceField = (field, isEditing) => {
-    const priceData = calculateGST(field.value);
-    const formattedWithGST = priceData.withGST.toLocaleString('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-    
-    const formattedWithoutGST = priceData.withoutGST.toLocaleString('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-    
-    const formattedGSTAmount = priceData.gstAmount.toLocaleString('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
   
-    return (
-      <StyledFieldBox key={field.id} isEditing={isEditing} variant={fieldVariant}>
-        <StyledFieldLabel>
-          {getIconForField(field.label)}
-          {field.label}
-        </StyledFieldLabel>
-        {isEditing ? (
-          <StyledInput
-            value={editedData[field.id] || ""}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder="Enter amount with GST"
-          />
-        ) : (
-          <div>
-            <StyledFieldValue style={{ fontWeight: 'bold' }}>
-              {formattedWithGST} (Incl. GST)
-            </StyledFieldValue>
-            <StyledFieldValue style={{ fontSize: '13px', color: '#555' }}>
-              {formattedWithoutGST} (Excl. GST)
-            </StyledFieldValue>
-            <StyledFieldValue style={{ fontSize: '12px', color: '#777' }}>
-              {formattedGSTAmount} (GST Amount)
-            </StyledFieldValue>
-          </div>
-        )}
-      </StyledFieldBox>
-    );
-  };
   const priceCheckpoints = [10, 12, 15, 17, 22, 24,26,28,29,62,64,66,70,72]; // Add more IDs as needed
 
   const FileUploadField = ({ chkId, currentValue, onChange, isEditing }) => {
@@ -1342,33 +1280,41 @@ const calculateGST = (amount) => {
       {/* Header with Back button */}
       <StyledHeader>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <StyledButton
+          <div
+        style={{
+          position: "fixed",
+          top: "60px",
+          left: "20px",
+          zIndex: 100,
+        }}
+      >
+        <StyledButton
             primary
             onClick={() => navigate(-1)}
             style={{ padding: "8px", borderRadius: "50%", minWidth: "40px", minHeight: "40px" }}
           >
             <ArrowLeft size={20} />
           </StyledButton>
+      </div>
+          
 
-          <div>
+          {/* <div>
             <StyledTitle level={1} style={{ color: "#344C7D", margin: 0 }}>
-              SANCHHAR RAILWAY TENDERS
+              JOB CARD
             </StyledTitle>
-            <StyledSubtitle style={{ margin: 0 }}>
-              TENDER Form Details {isAdmin && <StyledBadge color="#4caf50">Admin Access</StyledBadge>}
-            </StyledSubtitle>
-          </div>
+            
+          </div> */}
         </div>
 
         {/* Logo with decorative elements */}
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <StyledButton onClick={cycleFieldVariant} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          {/* <StyledButton onClick={cycleFieldVariant} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <Filter size={16} />
             Style: {fieldVariant.charAt(0).toUpperCase() + fieldVariant.slice(1)}
-          </StyledButton>
+          </StyledButton> */}
           
           {/* Add Export to Excel button */}
-          <StyledButton 
+          {/* <StyledButton 
             onClick={exportToExcel} 
             primary
             style={{ backgroundColor: "#344C7D", display: "flex", alignItems: "center", gap: "5px" }}
@@ -1376,9 +1322,9 @@ const calculateGST = (amount) => {
           >
             <Download size={16} />
             Export to Excel
-          </StyledButton>
+          </StyledButton> */}
           
-          <div style={{ position: "relative" }}>
+          {/* <div style={{ position: "relative" }}>
             <img
               src={logo || "/placeholder.svg"}
               alt="Logo"
@@ -1388,22 +1334,22 @@ const calculateGST = (amount) => {
                 zIndex: 1,
                 filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
               }}
-            />
-          </div>
+            /> 
+          </div>*/}
         </div>
       </StyledHeader>
 
       {/* Main Content */}
       <div style={{ margin: "0 auto" }}>
         {/* Tender Details */}
-        {renderStudentDetails()}
+        {/* {renderStudentDetails()} */}
 
         {/* Remaining Sections */}
         {Object.entries(sections).map(([sectionTitle, ids]) => renderSection(sectionTitle, ids))}
       </div>
 
       {/* Add a floating action button for quick navigation back to top */}
-      <div
+      {/* <div
         style={{
           position: "fixed",
           bottom: "20px",
@@ -1424,7 +1370,7 @@ const calculateGST = (amount) => {
         >
           <ArrowLeft size={24} style={{ transform: "rotate(90deg)" }} />
         </StyledButton>
-      </div>
+      </div> */}
 
       {/* Toast notification */}
       {toast.show && <StyledToast message={toast.message} type={toast.type} onClose={closeToast} />}

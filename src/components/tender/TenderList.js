@@ -68,35 +68,7 @@ function TenderList() {
     return "awarded-other";
   };
 
-  // Function to export data to Excel
-  const exportToExcel = () => {
-    // Prepare data for export
-    const dataToExport = filteredRecords.map((record) => {
-      const tenderNo = record.chkData?.find((chk) => chk.ChkId === "4")?.Value || "-";
-      const loaNo = record.chkData?.find((chk) => chk.ChkId === "60")?.Value || "-";
-      const buyer = record.chkData?.find((chk) => chk.ChkId === "7")?.Value || "-";
-      const date = formatDate(record.Datetime);
-      const awardedTo = record.chkData?.find((chk) => chk.ChkId === "56")?.Value || "-";
-      
-      return {
-        "Tender No.": tenderNo,
-        "LOA No.": loaNo,
-        "Buyer": buyer,
-        "Date": date,
-        "Awarded to": awardedTo
-      };
-    });
 
-    // Create worksheet
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Tenders");
-    
-    // Generate Excel file and trigger download
-    XLSX.writeFile(wb, "tenders.xlsx");
-  };
 
   const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
   const startIndex = page * rowsPerPage;
@@ -136,11 +108,9 @@ function TenderList() {
         <table className="tender-table">
           <thead>
             <tr>
-              <th>Tender No.</th>
-              <th>LOA No.</th>
-              <th>Buyer</th>
+              <th>Job Card</th>
+              <th>Client</th>
               <th>Date</th>
-              <th>Awarded to</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -148,28 +118,15 @@ function TenderList() {
             {currentRecords.length > 0 ? (
               currentRecords.map((record) => {
                 const nameEntry = record.chkData?.find(
-                  (chk) => chk.ChkId === "4"
-                );
-                const nameEntry2 = record.chkData?.find(
-                  (chk) => chk.ChkId === "7"
-                );
-                const nameEntry3 = record.chkData?.find(
-                  (chk) => chk.ChkId === "60"
-                );
-                const nameEntry4 = record.chkData?.find(
-                  (chk) => chk.ChkId === "56"
+                  (chk) => chk.ChkId === "3"
                 );
                 
-                const awardedValue = nameEntry4?.Value || "";
-                const rowClass = getRowClass(awardedValue);
 
                 return (
-                  <tr key={record.ID} className={rowClass}>
+                  <tr key={record.ID} >
+                    <td>{record.TempId || "-"}</td>
                     <td>{nameEntry?.Value || "-"}</td>
-                    <td>{nameEntry3?.Value || "-"}</td>
-                    <td>{nameEntry2?.Value || "-"}</td>
                     <td>{formatDate(record.Datetime)}</td>
-                    <td>{awardedValue}</td>
                     <td>
                       <button
                         className="view-button"

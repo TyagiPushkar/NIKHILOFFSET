@@ -24,7 +24,7 @@ import {
   InputAdornment
 } from "@mui/material"
 import { useNavigate } from "react-router-dom"
-
+import {ArrowLeft} from 'lucide-react'
 function AdmissionFormLogic() {
   const [pages, setPages] = useState([])
   const [checkpoints, setCheckpoints] = useState([])
@@ -36,6 +36,44 @@ function AdmissionFormLogic() {
   const [loading, setLoading] = useState(true)
   const [loadingError, setLoadingError] = useState("")
   const navigate = useNavigate()
+const StyledButton = ({ children, primary, ...props }) => {
+  const baseStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "8px 16px",
+    borderRadius: "8px",
+    fontWeight: "600",
+    fontSize: "14px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    border: "none",
+    outline: "none",
+    ...props.style,
+  }
+
+  const primaryStyle = {
+    ...baseStyle,
+    backgroundColor: "#344C7D",
+    color: "white",
+    boxShadow: "0 4px 10px rgba(246, 147, 32, 0.2)",
+  }
+
+  const secondaryStyle = {
+    ...baseStyle,
+    backgroundColor: "#f8f9fa",
+    color: "#333",
+    border: "1px solid #e0e0e0",
+  }
+
+  const style = primary ? primaryStyle : secondaryStyle
+
+  return (
+    <button {...props} style={style}>
+      {children}
+    </button>
+  )
+}
 
   // Amount fields configuration
   const amountFieldIds = [62, 64, 66, 70];
@@ -750,7 +788,7 @@ useEffect(() => {
               text: isDraft ? "Your draft has been saved successfully!" : "Your form has been submitted successfully!",
               confirmButtonColor: "#344C7D",
             }).then(() => {
-              navigate("/tender")
+              navigate("/job-card-list")
             })
           } catch (error) {
             console.error("Submission error", error)
@@ -813,26 +851,9 @@ useEffect(() => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 0, mb: 4 }}>
-      <Box
-        sx={{
-          background: "linear-gradient(to right, #EA4096, #EA4096)",
-          color: "white",
-          p: 2,
-          borderRadius: 1,
-          textAlign: "center",
-          mb: 3,
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <Typography variant="h5" fontWeight="bold">
-          {currentPage >= 3 ? "NIKHIL OFFSET" : "NIKHIL OFFSET"}
-        </Typography>
-        {/* <Typography variant="body2">
-          {currentPage >= 3 ? "Please complete the Letter Of Allotment details" : "Please complete all sections"}
-        </Typography> */}
-      </Box>
+      
 
-      {/* <Stepper
+       <Stepper
         activeStep={currentPage}
         alternativeLabel
         sx={{
@@ -850,7 +871,7 @@ useEffect(() => {
             <StepLabel>Step {index + 1}</StepLabel>
           </Step>
         ))}
-      </Stepper> */}
+      </Stepper> 
 
       
 
@@ -946,6 +967,22 @@ useEffect(() => {
           Your progress is saved as you navigate between steps
         </Typography>
       </Box>
+      <div
+              style={{
+                position: "fixed",
+                top: "70px",
+                left: "20px",
+                zIndex: 100,
+              }}
+            >
+              <StyledButton
+                  primary
+                  onClick={() => navigate(-1)}
+                  style={{ padding: "8px", borderRadius: "50%", minWidth: "40px", minHeight: "40px" }}
+                >
+                  <ArrowLeft size={20} />
+                </StyledButton>
+            </div>
     </Container>
   )
 }
