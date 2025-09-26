@@ -516,9 +516,9 @@ function EmployeeList() {
                   required
                 >
                   <MenuItem value="Admin">Admin</MenuItem>
-                  <MenuItem value="Project Manager">Project Manager</MenuItem>
-                  <MenuItem value="Technician">Technician</MenuItem>
-                  <MenuItem value="Customer Support">Customer Support</MenuItem>
+                  <MenuItem value="HR">HR</MenuItem>
+                  <MenuItem value="Guard">Guard</MenuItem>
+                  <MenuItem value="Employee">Employee</MenuItem>
                 </TextField>
               </Grid>
             </Grid>
