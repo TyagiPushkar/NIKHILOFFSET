@@ -357,85 +357,10 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
       </Drawer>
 
       {/* Notifications Menu */}
-      <Menu
-        anchorEl={notificationEl}
-        open={Boolean(notificationEl)}
-        onClose={handleNotificationClose}
-        PaperProps={{
-          sx: {
-            mt: 1.5,
-            minWidth: 300,
-            maxWidth: 400,
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-          },
-        }}
-      >
-        <Box sx={{ py: 1, px: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Notifications
-          </Typography>
-        </Box>
-        <Divider />
-        {notifications.length > 0 ? (
-          notifications.map((notification) => (
-            <MenuItem
-              key={notification.id}
-              onClick={() => handleNotificationClick(notification.id)}
-              sx={{ py: 1.5, borderBottom: "1px solid rgba(0,0,0,0.06)" }}
-            >
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: notification.read ? 400 : 600 }}>
-                  {notification.text}
-                </Typography>
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  {notification.time}
-                </Typography>
-              </Box>
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem disabled>
-            <Typography variant="body2" sx={{ color: "text.secondary", py: 2 }}>
-              No notifications
-            </Typography>
-          </MenuItem>
-        )}
-      </Menu>
+     
+       
 
-      {/* Profile Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-        PaperProps={{
-          sx: {
-            mt: 1.5,
-            minWidth: 180,
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-          },
-        }}
-      >
-        <MenuItem onClick={handleProfile}>
-          <Avatar sx={{ width: 24, height: 24, mr: 1.5, fontSize: "0.8rem" }}>
-            {user && user.username ? user.username.charAt(0).toUpperCase() : "U"}
-          </Avatar>
-          Profile
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <Settings sx={{ mr: 1.5, fontSize: "1.2rem" }} />
-          Settings
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <Help sx={{ mr: 1.5, fontSize: "1.2rem" }} />
-          Help
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
-          Logout
-        </MenuItem>
-      </Menu>
+      
     </>
   )
 }
