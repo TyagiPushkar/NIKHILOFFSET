@@ -68,8 +68,8 @@ function Employee() {
           <Container 
             maxWidth={false}
             sx={{ 
-              py: 3,
-              px: { xs: 1, sm: 2, md: 3 },
+              py: 0,
+              px: { xs: 0, sm: 0, md: 0 },
               height: "100%",
             }}
           >

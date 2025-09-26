@@ -123,36 +123,7 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
       </Box>
 
       <List sx={{ flexGrow: 1, px: 1 }}>
-        <ListItem
-          button
-          component={Link}
-          to="/dashboard"
-          selected={location.pathname === "/dashboard"}
-          sx={{
-            borderRadius: "10px",
-            mb: 1,
-            color: location.pathname === "/dashboard" ? "#344C7D" : "#666",
-            backgroundColor: location.pathname === "/dashboard" ? "rgba(246, 147, 32, 0.08)" : "transparent",
-            "&:hover": {
-              backgroundColor: location.pathname === "/dashboard" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
-            },
-            transition: "all 0.2s ease",
-          }}
-        >
-          <Dashboard
-            sx={{
-              mr: 2,
-              color: "inherit",
-              fontSize: "1.2rem",
-            }}
-          />
-          <ListItemText
-            primary="Dashboard"
-            primaryTypographyProps={{
-              fontWeight: location.pathname === "/dashboard" ? 600 : 500,
-            }}
-          />
-        </ListItem>
+        
 <ListItem
           button
           component={Link}
@@ -183,56 +154,7 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             }}
           />
         </ListItem>
-        <ListItem
-          button
-          component={Link}
-          to="/notification"
-          selected={location.pathname === "/notification"}
-          sx={{
-            borderRadius: "10px",
-            mb: 1,
-            color: location.pathname === "/notification" ? "#344C7D" : "#666",
-            backgroundColor: location.pathname === "/notification" ? "rgba(246, 147, 32, 0.08)" : "transparent",
-            "&:hover": {
-              backgroundColor:
-                location.pathname === "/notification" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
-            },
-            transition: "all 0.2s ease",
-          }}
-        >
-          <Notifications
-            sx={{
-              mr: 2,
-              color: "inherit",
-              fontSize: "1.2rem",
-            }}
-          />
-          <ListItemText
-            primary="Notifications"
-            primaryTypographyProps={{
-              fontWeight: location.pathname === "/notification" ? 600 : 500,
-            }}
-          />
-          {unreadCount > 0 && (
-            <Box
-              sx={{
-                minWidth: 20,
-                height: 20,
-                borderRadius: 10,
-                backgroundColor: "#344C7D",
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.75rem",
-                fontWeight: "bold",
-                ml: 1,
-              }}
-            >
-              {unreadCount}
-            </Box>
-          )}
-        </ListItem>
+        
       </List>
 
       {user && (

@@ -56,7 +56,7 @@ export default function LoginPage() {
       if (response.data.success) {
         login(response.data.data);
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/employees");
         }, 1000);
         setLoading(false);
       } else {
