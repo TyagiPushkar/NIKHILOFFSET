@@ -46,7 +46,8 @@ function Sidebar() {
   const defaultRoutes = [
     { path: "/employees", name: "Employees", icon: <Person /> },
     { path: "/attendance", name: "Attendance", icon: <DynamicFormIcon /> },
-   { path: "/job-card-list", name: "Job Cards", icon: <BadgeIcon /> },
+    { path: "/job-card-list", name: "Job Cards", icon: <BadgeIcon /> },
+   { path: "/visit", name: "Visit", icon: <MapIcon /> },
   ]
 
   const userModules = user?.modules || []

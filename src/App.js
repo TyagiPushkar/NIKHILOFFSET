@@ -28,6 +28,7 @@ import AMCWork from './pages/AMCWork';
 import Report from './pages/Report';
 import SummaryReport from './pages/Summary';
 import Dashboard from './pages/Dashboard';
+import VisitReport from './pages/VisitReport';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -69,6 +70,7 @@ function App() {
             <Route path="/tender/view/:activityId" element={<PrivateRoute element={ViewTender} />} />
             <Route path="/loa/view/:activityId" element={<PrivateRoute element={ViewLOA} />} />
 
+            <Route path="/visit" element={<PrivateRoute element={VisitReport} />} />
 
             <Route path="/consignee" element={<PrivateRoute element={Buyer} />} />
             <Route path="/new-consignee" element={<PrivateRoute element={Buyer} />} />
