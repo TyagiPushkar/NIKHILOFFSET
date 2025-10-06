@@ -29,7 +29,7 @@ function VisitReport() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       {/* Navbar - Full width at the top */}
-      <Navbar />
+      {/* <Navbar /> */}
       
       {/* Main content area with sidebar and content */}
       <Box sx={{ display: "flex", flexGrow: 1, overflow: "hidden" }}>

@@ -55,8 +55,9 @@ import {
   Home,
   History,
   Group,
+  FilterList,
 } from "@mui/icons-material"
-import { format, parseISO, isToday } from "date-fns"
+import { format, parseISO, isToday, startOfDay, endOfDay, subDays } from "date-fns"
 import axios from "axios"
 
 // Mock auth context
@@ -69,6 +70,20 @@ const mockUseAuth = () => ({
   },
 })
 
+// Predefined reasons for visits
+const PREDEFINED_REASONS = [
+  "Client Meeting",
+  "Bank Work",
+  "Site Visit",
+  "Personal Work",
+  "Medical Appointment",
+  "Vendor Meeting",
+  "Training/Workshop",
+  "Official Errand",
+  "Field Work",
+  "Other"
+]
+
 const EmployeeVisitManagement = () => {
   const { user } = mockUseAuth()
   const theme = useTheme()
@@ -76,7 +91,6 @@ const EmployeeVisitManagement = () => {
   
   const [employees, setEmployees] = useState([])
   const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [visitType, setVisitType] = useState("out")
   const [purpose, setPurpose] = useState("")
   const [remarks, setRemarks] = useState("")
   const [loading, setLoading] = useState(false)
@@ -88,11 +102,31 @@ const EmployeeVisitManagement = () => {
   const [editingVisit, setEditingVisit] = useState(null)
   const [currentTab, setCurrentTab] = useState(0)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [dateFilter, setDateFilter] = useState("today")
 
   // Filter employees - only show those who are NOT currently out
   const availableEmployees = employees.filter(employee => 
     !activeVisits.some(visit => visit.EmpId === employee.EmpId && !visit.InTime)
   )
+
+  // Filter history based on date filter
+  const filteredHistory = visitHistory.filter(visit => {
+    const visitDate = parseISO(visit.OutTime)
+    const today = new Date()
+    
+    switch (dateFilter) {
+      case "today":
+        return isToday(visitDate)
+      case "yesterday":
+        return isToday(visitDate) || visitDate >= startOfDay(subDays(today, 1))
+      case "week":
+        return visitDate >= startOfDay(subDays(today, 7))
+      case "month":
+        return visitDate >= startOfDay(subDays(today, 30))
+      default:
+        return true
+    }
+  })
 
   // Fetch employees list
   const fetchEmployees = async () => {
@@ -141,7 +175,7 @@ const EmployeeVisitManagement = () => {
   const fetchVisitHistory = async () => {
     try {
       const response = await axios.get(
-        `https://namami-infotech.com/NIKHILOFFSET/src/visit/get_visit_history.php?Tenent_Id=${user.tenent_id}&limit=20`,
+        `https://namami-infotech.com/NIKHILOFFSET/src/visit/get_visit_history.php?Tenent_Id=${user.tenent_id}&limit=50`,
         { timeout: 10000 }
       )
       
@@ -169,30 +203,8 @@ const EmployeeVisitManagement = () => {
     }
 
     if (!purpose.trim()) {
-      setError("Please enter purpose of visit")
+      setError("Please select a purpose")
       return
-    }
-
-    // Additional validation: Prevent marking "out" for employees already out
-    if (visitType === "out") {
-      const isAlreadyOut = activeVisits.some(visit => 
-        visit.EmpId === selectedEmployee.EmpId && !visit.InTime
-      )
-      if (isAlreadyOut) {
-        setError("This employee is already marked as out. Please mark them as 'In' first.")
-        return
-      }
-    }
-
-    // Additional validation: Prevent marking "in" for employees not out
-    if (visitType === "in") {
-      const isNotOut = !activeVisits.some(visit => 
-        visit.EmpId === selectedEmployee.EmpId && !visit.InTime
-      )
-      if (isNotOut) {
-        setError("This employee is not currently marked as out. Please mark them as 'Out' first.")
-        return
-      }
     }
 
     setLoading(true)
@@ -201,7 +213,7 @@ const EmployeeVisitManagement = () => {
     try {
       const visitData = {
         EmpId: selectedEmployee.EmpId,
-        VisitType: visitType,
+        VisitType: "out", // Always "out" for new entries
         Purpose: purpose,
         Remarks: remarks,
         Tenent_Id: user.tenent_id,
@@ -215,7 +227,7 @@ const EmployeeVisitManagement = () => {
       )
 
       if (response.data.success) {
-        setSuccess(`Visit ${visitType === "out" ? "out" : "in"} recorded successfully!`)
+        setSuccess("Visit out recorded successfully!")
         setPurpose("")
         setRemarks("")
         setSelectedEmployee(null)
@@ -224,18 +236,54 @@ const EmployeeVisitManagement = () => {
         fetchActiveVisits()
         fetchVisitHistory()
         
-        // Switch to appropriate tab
-        if (visitType === "out") {
-          setCurrentTab(1) // Switch to "Currently Out" tab
-        } else {
-          setCurrentTab(2) // Switch to "History" tab
-        }
+        // Switch to "Currently Out" tab
+        setCurrentTab(1)
       } else {
         setError(response.data.message || "Failed to record visit")
       }
     } catch (error) {
       console.error("Error recording visit:", error)
       setError("Error recording visit: " + (error.response?.data?.message || error.message))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleMarkReturn = async (visit) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const visitData = {
+        EmpId: visit.EmpId,
+        VisitType: "in",
+        Purpose: `Return from: ${visit.Purpose}`,
+        Remarks: "Auto-generated return entry",
+        Tenent_Id: user.tenent_id,
+        CreatedBy: user.emp_id,
+      }
+
+      const response = await axios.post(
+        "https://namami-infotech.com/NIKHILOFFSET/src/visit/create_visit.php",
+        visitData,
+        { timeout: 10000 }
+      )
+
+      if (response.data.success) {
+        setSuccess("Return marked successfully!")
+        
+        // Refresh data
+        fetchActiveVisits()
+        fetchVisitHistory()
+        
+        // Switch to "History" tab
+        setCurrentTab(2)
+      } else {
+        setError(response.data.message || "Failed to mark return")
+      }
+    } catch (error) {
+      console.error("Error marking return:", error)
+      setError("Error marking return: " + (error.response?.data?.message || error.message))
     } finally {
       setLoading(false)
     }
@@ -290,10 +338,8 @@ const EmployeeVisitManagement = () => {
   }
 
   const quickMarkReturn = (visit) => {
-    setSelectedEmployee({ EmpId: visit.EmpId, Name: visit.Name })
-    setVisitType("in")
-    setPurpose(`Return from: ${visit.Purpose}`)
-    setCurrentTab(0) // Switch back to entry form
+    handleMarkReturn(visit)
+    setQuickActionsOpen(false)
   }
 
   const refreshData = () => {
@@ -340,7 +386,7 @@ const EmployeeVisitManagement = () => {
         zIndex: 1000,
       }}
     >
-      <BottomNavigationAction label="Entry" icon={<Add />} />
+      <BottomNavigationAction label="New Out" icon={<Add />} />
       <BottomNavigationAction 
         label="Out Now" 
         icon={
@@ -380,7 +426,7 @@ const EmployeeVisitManagement = () => {
     >
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" gutterBottom>
-          Quick Actions
+          Quick Return Actions
         </Typography>
         <Divider sx={{ mb: 2 }} />
         
@@ -390,10 +436,7 @@ const EmployeeVisitManagement = () => {
             variant="outlined"
             fullWidth
             startIcon={<Login />}
-            onClick={() => {
-              quickMarkReturn(visit)
-              setQuickActionsOpen(false)
-            }}
+            onClick={() => quickMarkReturn(visit)}
             sx={{ mb: 1, justifyContent: 'flex-start' }}
           >
             Mark {visit.Name} Return
@@ -412,30 +455,22 @@ const EmployeeVisitManagement = () => {
   // Main content with tabs for mobile
   const renderTabContent = () => {
     switch (currentTab) {
-      case 0: // Entry Form
+      case 0: // Entry Form - Only for marking OUT
         return (
           <Card sx={{ mb: 2 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Add color="primary" />
-                Record Visit
+                <ExitToApp color="primary" />
+                Mark Employee Out
               </Typography>
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Autocomplete
-                    options={visitType === "out" ? availableEmployees : employees}
+                    options={availableEmployees}
                     getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
                     value={selectedEmployee}
-                    onChange={(event, newValue) => {
-                      setSelectedEmployee(newValue)
-                      if (newValue) {
-                        const isOut = activeVisits.some(visit => 
-                          visit.EmpId === newValue.EmpId && !visit.InTime
-                        )
-                        setVisitType(isOut ? "in" : "out")
-                      }
-                    }}
+                    onChange={(event, newValue) => setSelectedEmployee(newValue)}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -443,6 +478,7 @@ const EmployeeVisitManagement = () => {
                         variant="outlined"
                         fullWidth
                         size={isMobile ? "small" : "medium"}
+                        helperText="Only employees currently in office are shown"
                       />
                     )}
                     renderOption={(props, option) => (
@@ -465,40 +501,19 @@ const EmployeeVisitManagement = () => {
 
                 <Grid item xs={12}>
                   <FormControl fullWidth size={isMobile ? "small" : "medium"}>
-                    <InputLabel>Visit Type</InputLabel>
+                    <InputLabel>Purpose *</InputLabel>
                     <Select
-                      value={visitType}
-                      onChange={(e) => setVisitType(e.target.value)}
-                      label="Visit Type"
+                      value={purpose}
+                      onChange={(e) => setPurpose(e.target.value)}
+                      label="Purpose *"
                     >
-                      <MenuItem value="out">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <ExitToApp color="warning" />
-                          <Typography>Going Out</Typography>
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="in">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Login color="success" />
-                          <Typography>Returning In</Typography>
-                        </Box>
-                      </MenuItem>
+                      {PREDEFINED_REASONS.map((reason) => (
+                        <MenuItem key={reason} value={reason}>
+                          {reason}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField
-                    label="Purpose"
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
-                    variant="outlined"
-                    fullWidth
-                    multiline
-                    rows={isMobile ? 2 : 3}
-                    size={isMobile ? "small" : "medium"}
-                    placeholder="e.g., Client meeting, Bank work, Personal work..."
-                  />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -511,6 +526,7 @@ const EmployeeVisitManagement = () => {
                     multiline
                     rows={isMobile ? 2 : 3}
                     size={isMobile ? "small" : "medium"}
+                    placeholder="Any additional details..."
                   />
                 </Grid>
 
@@ -519,14 +535,12 @@ const EmployeeVisitManagement = () => {
                     variant="contained"
                     size={isMobile ? "medium" : "large"}
                     onClick={handleSubmit}
-                    disabled={loading || !selectedEmployee || !purpose.trim()}
-                    startIcon={loading ? <CircularProgress size={20} /> : 
-                      visitType === "out" ? <ExitToApp /> : <Login />}
+                    disabled={loading || !selectedEmployee || !purpose}
+                    startIcon={loading ? <CircularProgress size={20} /> : <ExitToApp />}
                     fullWidth
                     sx={{ py: isMobile ? 1 : 1.5 }}
                   >
-                    {loading ? "Processing..." : 
-                     `Record ${visitType === "out" ? "Out" : "In"}`}
+                    {loading ? "Processing..." : "Mark Employee Out"}
                   </Button>
                 </Grid>
               </Grid>
@@ -534,7 +548,7 @@ const EmployeeVisitManagement = () => {
           </Card>
         )
 
-      case 1: // Currently Out
+      case 1: // Currently Out - Only for marking IN
         return (
           <Card>
             <CardContent>
@@ -585,8 +599,13 @@ const EmployeeVisitManagement = () => {
                             </Typography>
                             <Typography variant="caption" display="block" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               <AccessTime fontSize="inherit" />
-                              {format(parseISO(visit.OutTime), "hh:mm a")}
+                              Out since: {format(parseISO(visit.OutTime), "hh:mm a")}
                             </Typography>
+                            {visit.Remarks && (
+                              <Typography variant="caption" display="block" fontStyle="italic">
+                                Remarks: {visit.Remarks}
+                              </Typography>
+                            )}
                           </Box>
                         }
                       />
@@ -595,9 +614,10 @@ const EmployeeVisitManagement = () => {
                         color="success"
                         size="small"
                         startIcon={<Login />}
-                        onClick={() => quickMarkReturn(visit)}
+                        onClick={() => handleMarkReturn(visit)}
+                        disabled={loading}
                       >
-                        Return
+                        Mark Return
                       </Button>
                     </ListItem>
                   ))}
@@ -607,32 +627,49 @@ const EmployeeVisitManagement = () => {
           </Card>
         )
 
-      case 2: // History
+      case 2: // History with Date Filter
         return (
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Schedule color="primary" />
-                Recent History
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Schedule color="primary" />
+                  Visit History
+                </Typography>
+                
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <Select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    startAdornment={<FilterList fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />}
+                  >
+                    <MenuItem value="today">Today</MenuItem>
+                    <MenuItem value="yesterday">Yesterday</MenuItem>
+                    <MenuItem value="week">Last Week</MenuItem>
+                    <MenuItem value="month">Last Month</MenuItem>
+                    <MenuItem value="all">All Time</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
-              {visitHistory.length === 0 ? (
+              {filteredHistory.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 3 }}>
                   <Schedule sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
                   <Typography color="text.secondary">
-                    No visit history
+                    No visit history for {dateFilter}
                   </Typography>
                 </Box>
               ) : (
                 <List dense={isMobile}>
-                  {visitHistory.slice(0, 10).map((visit) => (
+                  {filteredHistory.map((visit) => (
                     <ListItem
                       key={visit.VisitId}
                       sx={{
                         border: '1px solid',
-                        borderColor: 'grey.200',
+                        borderColor: visit.InTime ? 'success.light' : 'warning.light',
                         borderRadius: 1,
                         mb: 1,
+                        backgroundColor: visit.InTime ? 'success.light' : 'warning.light',
                       }}
                     >
                       <ListItemIcon>
@@ -647,18 +684,32 @@ const EmployeeVisitManagement = () => {
                         primary={
                           <Typography variant="subtitle2" fontWeight="medium">
                             {visit.Name}
+                            <Chip 
+                              label={visit.InTime ? "Returned" : "Out"} 
+                              color={visit.InTime ? "success" : "warning"}
+                              size="small" 
+                              sx={{ ml: 1 }}
+                            />
                           </Typography>
                         }
                         secondary={
                           <Box>
                             <Typography variant="caption" display="block">
+                              {visit.EmpId} • {format(parseISO(visit.OutTime), "MMM dd, hh:mm a")}
+                            </Typography>
+                            <Typography variant="caption" display="block" fontWeight="medium">
                               {visit.Purpose}
                             </Typography>
-                            <Typography variant="caption" display="block" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <AccessTime fontSize="inherit" />
-                              {format(parseISO(visit.OutTime), "hh:mm a")}
-                              {/* {visit.InTime && ` → ${format(parseISO(visit.InTime), "hh:mm a"}`} */}
-                            </Typography>
+                            {visit.InTime && (
+                              <Typography variant="caption" display="block">
+                                Returned: {format(parseISO(visit.InTime), "hh:mm a")}
+                              </Typography>
+                            )}
+                            {visit.Remarks && (
+                              <Typography variant="caption" display="block" fontStyle="italic">
+                                {visit.Remarks}
+                              </Typography>
+                            )}
                           </Box>
                         }
                       />
@@ -677,24 +728,11 @@ const EmployeeVisitManagement = () => {
 
   return (
     <Box sx={{ 
-      pb: isMobile ? 7 : 3, // Add padding for bottom navigation
+      pb: isMobile ? 7 : 3,
       backgroundColor: "#f5f5f5", 
       minHeight: "100vh" 
     }}>
-      {/* Header */}
-      <AppBar position="static" color="primary" elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Visit Management
-          </Typography>
-          <Tooltip title="Refresh">
-            <IconButton color="inherit" onClick={refreshData} disabled={loading}>
-              {loading ? <CircularProgress size={24} color="inherit" /> : <Refresh />}
-            </IconButton>
-          </Tooltip>
-        </Toolbar>
-      </AppBar>
-
+      
       {/* Main Content */}
       <Box sx={{ p: isMobile ? 1 : 3 }}>
         {/* Alerts */}
@@ -716,7 +754,7 @@ const EmployeeVisitManagement = () => {
             onChange={(event, newValue) => setCurrentTab(newValue)}
             sx={{ mb: 3 }}
           >
-            <Tab label="New Entry" />
+            <Tab label="Mark Out" />
             <Tab label={`Currently Out (${activeVisits.length})`} />
             <Tab label="History" />
           </Tabs>
@@ -734,71 +772,6 @@ const EmployeeVisitManagement = () => {
       
       {/* Quick Actions Drawer */}
       {isMobile && <QuickActionsDrawer />}
-
-      {/* Edit Dialog */}
-      <Dialog 
-        open={editDialogOpen} 
-        onClose={() => {
-          setEditDialogOpen(false)
-          setEditingVisit(null)
-        }}
-        maxWidth="sm"
-        fullWidth
-        fullScreen={isMobile}
-      >
-        <DialogTitle>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Edit color="primary" />
-            Edit Visit
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {editingVisit && (
-            <Box sx={{ pt: 2 }}>
-              <TextField
-                label="Purpose"
-                value={editingVisit.Purpose || ''}
-                onChange={(e) => setEditingVisit({...editingVisit, Purpose: e.target.value})}
-                fullWidth
-                multiline
-                rows={isMobile ? 3 : 2}
-                sx={{ mb: 2 }}
-                size={isMobile ? "small" : "medium"}
-              />
-              <TextField
-                label="Remarks"
-                value={editingVisit.Remarks || ''}
-                onChange={(e) => setEditingVisit({...editingVisit, Remarks: e.target.value})}
-                fullWidth
-                multiline
-                rows={isMobile ? 3 : 2}
-                size={isMobile ? "small" : "medium"}
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={() => {
-              setEditDialogOpen(false)
-              setEditingVisit(null)
-            }}
-            size={isMobile ? "large" : "medium"}
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="contained"
-            onClick={() => handleEditVisit(editingVisit.VisitId, {
-              Purpose: editingVisit.Purpose,
-              Remarks: editingVisit.Remarks
-            })}
-            size={isMobile ? "large" : "medium"}
-          >
-            Update
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   )
 }
@@ -825,7 +798,7 @@ const Badge = ({ badgeContent, color, children }) => (
           fontWeight: 'bold',
         }}
       >
-        {badgeContent}
+        {badgeContent > 9 ? '9+' : badgeContent}
       </Box>
     )}
   </Box>
