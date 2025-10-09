@@ -385,156 +385,164 @@ function TaskList() {
               <th>Audit History</th>
             </tr>
           </thead>
-          <tbody>
-            {currentTasks.length > 0 ? (
-              currentTasks.map((task) => {
-                const availableActions = getAvailableActions(task.status_text);
-                const isActionLoading = actionLoading[task.id];
-                const isExpanded = expandedTasks[task.id];
-                const isAuditLoading = auditLoading[task.id];
-                const taskAuditHistory = auditHistory[task.id] || [];
+<tbody>
+  {currentTasks.length > 0 ? (
+    currentTasks.map((task) => {
+      const availableActions = getAvailableActions(task.status_text);
+      const isActionLoading = actionLoading[task.id];
+      const isExpanded = expandedTasks[task.id];
+      const isAuditLoading = auditLoading[task.id];
+      const taskAuditHistory = auditHistory[task.id] || [];
 
-                return (
-                  <React.Fragment key={task.id}>
-                    <tr className="task-row">
-                      <td className="job-card-cell">{task.job_card_no || "-"}</td>
-                      <td className="milestone-cell">{task.milestone || "-"}</td>
-                      <td className="status-cell">
-                        <span className={`status-badge ${getStatusClass(task.status_text)}`}>
-                          {task.status_text || task.status || "Unknown"}
-                        </span>
-                      </td>
-                      <td className="date-cell">{formatDate(task.create_date)}</td>
-                      <td className="date-cell">{formatDate(task.update_date)}</td>
-                      
-                      <td className="task-action-cell">
-                        {availableActions.length > 0 ? (
-                          <div className="action-container">
-                            <select
-                              value=""
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  const action = e.target.value;
-                                  e.target.value = "";
-                                  
-                                  if (action === "Stop") {
-                                    if (window.confirm("Are you sure you want to mark this task as Complete?")) {
-                                      handleActionChange(task.id, action, task.status_text);
-                                    }
-                                  } else if (action === "Hold") {
-                                    if (window.confirm("Are you sure you want to put this task on Hold?")) {
-                                      handleActionChange(task.id, action, task.status_text);
-                                    }
-                                  } else {
-                                    handleActionChange(task.id, action, task.status_text);
-                                  }
-                                }
-                              }}
-                              disabled={isActionLoading}
-                              className="action-select"
-                            >
-                              <option value="">Select Action</option>
-                              {availableActions.map((action) => (
-                                <option key={action} value={action}>
-                                  {getActionDisplayText(action, task.status_text)}
-                                </option>
-                              ))}
-                            </select>
-                            {isActionLoading && (
-                              <div className="action-loading">Updating...</div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="no-actions">No actions available</span>
-                        )}
-                      </td>
-                      
-                      <td className="audit-cell">
-                        <button
-                          className="audit-toggle-button"
-                          onClick={() => toggleAuditHistory(task.id)}
-                          disabled={isActionLoading || isAuditLoading}
-                        >
-                          {isExpanded ? "▲ Hide" : "▼ Show"} History
-                          {isAuditLoading && "..."}
-                        </button>
-                      </td>
-                    </tr>
-                    
-                    {/* Audit History Accordion */}
-                    {isExpanded && (
-                      <tr className="audit-history-row">
-                        <td colSpan="7" className="audit-history-cell">
-                          <div className="audit-history-container">
-                            <h4 className="audit-history-title">
-                              Audit History for Job Card: {task.job_card_no}
-                            </h4>
-                            
-                            {isAuditLoading ? (
-                              <div className="audit-loading">Loading audit history...</div>
-                            ) : taskAuditHistory.length > 0 ? (
-                              <div className="audit-history-table-container">
-                                <table className="audit-history-table">
-                                  <thead>
-                                    <tr>
-                                      <th>Date & Time</th>
-                                      <th>Changed By</th>
-                                      <th>Previous Status</th>
-                                      <th>New Status</th>
-                                      <th>Action</th>
-                                      <th>Remarks</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {taskAuditHistory.map((audit) => (
-                                      <tr key={audit.id} className="audit-row">
-                                        <td className="audit-date">
-                                          {formatDateTime(audit.change_time)}
-                                        </td>
-                                        <td className="audit-changed-by">
-                                          {audit.changed_by}
-                                        </td>
-                                        <td className="audit-old-status">
-                                          <span className={`status-badge ${getStatusClass(audit.old_status)}`}>
-                                            {audit.old_status}
-                                          </span>
-                                        </td>
-                                        <td className="audit-new-status">
-                                          <span className={`status-badge ${getStatusClass(audit.new_status)}`}>
-                                            {audit.new_status}
-                                          </span>
-                                        </td>
-                                        <td className="audit-action">
-                                          {getStatusChangeDescription(audit.old_status, audit.new_status)}
-                                        </td>
-                                        <td className="audit-remarks">
-                                          {audit.remarks}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            ) : (
-                              <div className="no-audit-data">
-                                No audit history available for this task
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="7" className="no-tasks">
-                  No tasks found
-                </td>
-              </tr>
-            )}
-          </tbody>
+      return (
+        <React.Fragment key={task.id}>
+          <tr className="task-row">
+            <td className="job-card-cell" data-label="Job Card">
+              {task.job_card_no || "-"}
+            </td>
+            <td className="milestone-cell" data-label="Milestone">
+              {task.milestone || "-"}
+            </td>
+            <td className="status-cell" data-label="Status">
+              <span className={`status-badge ${getStatusClass(task.status_text)}`}>
+                {task.status_text || task.status || "Unknown"}
+              </span>
+            </td>
+            <td className="date-cell" data-label="Created Date">
+              {formatDate(task.create_date)}
+            </td>
+            <td className="date-cell" data-label="Updated Date">
+              {formatDate(task.update_date)}
+            </td>
+            
+            <td className="task-action-cell" data-label="Task Action">
+              {availableActions.length > 0 ? (
+                <div className="action-container">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const action = e.target.value;
+                        e.target.value = "";
+                        
+                        if (action === "Stop") {
+                          if (window.confirm("Are you sure you want to mark this task as Complete?")) {
+                            handleActionChange(task.id, action, task.status_text);
+                          }
+                        } else if (action === "Hold") {
+                          if (window.confirm("Are you sure you want to put this task on Hold?")) {
+                            handleActionChange(task.id, action, task.status_text);
+                          }
+                        } else {
+                          handleActionChange(task.id, action, task.status_text);
+                        }
+                      }
+                    }}
+                    disabled={isActionLoading}
+                    className="action-select"
+                  >
+                    <option value="">Select Action</option>
+                    {availableActions.map((action) => (
+                      <option key={action} value={action}>
+                        {getActionDisplayText(action, task.status_text)}
+                      </option>
+                    ))}
+                  </select>
+                  {isActionLoading && (
+                    <div className="action-loading">Updating...</div>
+                  )}
+                </div>
+              ) : (
+                <span className="no-actions">No actions available</span>
+              )}
+            </td>
+            
+            <td className="audit-cell" data-label="Audit History">
+              <button
+                className="audit-toggle-button"
+                onClick={() => toggleAuditHistory(task.id)}
+                disabled={isActionLoading || isAuditLoading}
+              >
+                {isExpanded ? "▲ Hide" : "▼ Show"} History
+                {isAuditLoading && "..."}
+              </button>
+            </td>
+          </tr>
+          
+          {/* Audit History Accordion */}
+          {isExpanded && (
+            <tr className="audit-history-row">
+              <td colSpan="7" className="audit-history-cell">
+                <div className="audit-history-container">
+                  <h4 className="audit-history-title">
+                    Audit History for Job Card: {task.job_card_no}
+                  </h4>
+                  
+                  {isAuditLoading ? (
+                    <div className="audit-loading">Loading audit history...</div>
+                  ) : taskAuditHistory.length > 0 ? (
+                    <div className="audit-history-table-container">
+                      <table className="audit-history-table">
+                        <thead>
+                          <tr>
+                            <th>Date & Time</th>
+                            <th>Changed By</th>
+                            <th>Previous Status</th>
+                            <th>New Status</th>
+                            <th>Action</th>
+                            <th>Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {taskAuditHistory.map((audit) => (
+                            <tr key={audit.id} className="audit-row">
+                              <td className="audit-date">
+                                {formatDateTime(audit.change_time)}
+                              </td>
+                              <td className="audit-changed-by">
+                                {audit.changed_by}
+                              </td>
+                              <td className="audit-old-status">
+                                <span className={`status-badge ${getStatusClass(audit.old_status)}`}>
+                                  {audit.old_status}
+                                </span>
+                              </td>
+                              <td className="audit-new-status">
+                                <span className={`status-badge ${getStatusClass(audit.new_status)}`}>
+                                  {audit.new_status}
+                                </span>
+                              </td>
+                              <td className="audit-action">
+                                {getStatusChangeDescription(audit.old_status, audit.new_status)}
+                              </td>
+                              <td className="audit-remarks">
+                                {audit.remarks}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="no-audit-data">
+                      No audit history available for this task
+                    </div>
+                  )}
+                </div>
+              </td>
+            </tr>
+          )}
+        </React.Fragment>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan="7" className="no-tasks">
+        No tasks found
+      </td>
+    </tr>
+  )}
+</tbody>
         </table>
       </div>
 
