@@ -4,10 +4,10 @@ import React from "react"
 import Navbar from "../components/Navbar"
 import Sidebar from "../components/Sidebar"
 import { Box, useMediaQuery, useTheme, Container } from "@mui/material"
-import DashboardData from "../components/dashboard/DashboardData"
+import TaskList from "../components/tasks/TaskList"
 
 
-function Dashboard() {
+function Task() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const isTablet = useMediaQuery(theme.breakpoints.down("md"))
@@ -17,10 +17,10 @@ function Dashboard() {
   
   // Determine which component to render based on the URL
   const renderContent = () => {
-    if (currentPath.includes("/dashboard")) {
-      return <DashboardData />
+    if (currentPath.includes("/tasks")) {
+      return <TaskList />
     } 
-    return <DashboardData /> // Default fallback
+    return <TaskList /> // Default fallback
   }
 
   // Calculate sidebar width based on state and screen size
@@ -80,4 +80,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default Task

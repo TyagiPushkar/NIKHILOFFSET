@@ -29,6 +29,7 @@ import Report from './pages/Report';
 import SummaryReport from './pages/Summary';
 import Dashboard from './pages/Dashboard';
 import VisitReport from './pages/VisitReport';
+import Task from './pages/Task';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -60,7 +61,7 @@ function App() {
             <Route path="/profile" element={<PrivateRoute element={User} />} />
 
             <Route path="/summary" element={<PrivateRoute element={SummaryReport} />} />
-            <Route path="/report" element={<PrivateRoute element={Report} />} />
+            <Route path="/dashboard" element={<PrivateRoute element={Dashboard} />} />
 
 
             <Route path="/job-card-list" element={<PrivateRoute element={Tender} />} />
@@ -71,6 +72,7 @@ function App() {
             <Route path="/loa/view/:activityId" element={<PrivateRoute element={ViewLOA} />} />
 
             <Route path="/visit" element={<PrivateRoute element={VisitReport} />} />
+            <Route path="/tasks" element={<PrivateRoute element={Task} />} />
 
             <Route path="/consignee" element={<PrivateRoute element={Buyer} />} />
             <Route path="/new-consignee" element={<PrivateRoute element={Buyer} />} />

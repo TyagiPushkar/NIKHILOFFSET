@@ -1,180 +1,223 @@
-import React, { useEffect, useState } from 'react';
-import {
-    Avatar,
-    Box,
-    CircularProgress,
-    Divider,
-    // Grid,
-    LinearProgress,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
-    Tab,
-    Tabs,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    Typography,
-    Card,
-    // CardContent,
-    Paper,
-} from '@mui/material';
-import { motion } from 'framer-motion';
-import axios from 'axios';
-import { useAuth } from '../auth/AuthContext';
-// import UserProfile from '../employee/UserProfile';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "./Dashboard.css";
 
-const DashboardData = () => {
-    const [employeeData, setEmployeeData] = useState(null);
-    const [leaveDetails, setLeaveDetails] = useState(null);
-    const [expenseDetails, setExpenseDetails] = useState(null);
-    const [attendanceDetails, setAttendanceDetails] = useState([]);
-    const [assetDetails, setAssetDetails] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState(0);
+function DashboardData() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    const { user } = useAuth();
-    const EmpId = user.emp_id;
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const responses = await Promise.all([
-                    axios.get(`https://namami-infotech.com/NIKHILOFFSET/src/employee/view_employee.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/NIKHILOFFSET/src/leave/balance_leave.php?empid=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/NIKHILOFFSET/src/expense/get_expense.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/NIKHILOFFSET/src/attendance/view_attendance.php?EmpId=${EmpId}`),
-                    axios.get(`https://namami-infotech.com/NIKHILOFFSET/src/assets/get_issue_asset.php?EmpId=${EmpId}`)
-                ]);
+  const fetchDashboardData = async () => {
+    try {
+      const response = await axios.get(
+        "https://namami-infotech.com/NIKHILOFFSET/src/dashboard/dashboard.php"
+      );
+      
+      if (response.data.success) {
+        setDashboardData(response.data.data);
+      } else {
+        setError("Failed to fetch dashboard data.");
+      }
+    } catch (err) {
+      setError("Failed to connect to the server.");
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                setEmployeeData(responses[0].data.data);
-                setLeaveDetails(responses[1].data.data);
-                setExpenseDetails(responses[2].data.data);
-                setAttendanceDetails(responses[3].data.data);
-                setAssetDetails(responses[4].data.data);
-            } catch (err) {
-                setError('Failed to fetch data');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "complete":
+        return "#28a745";
+      case "in progress":
+        return "#007bff";
+      case "pending":
+        return "#ffc107";
+      case "hold":
+        return "#dc3545";
+      default:
+        return "#6c757d";
+    }
+  };
 
-        fetchData();
-    }, [EmpId]);
+  const getStatusClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case "complete":
+        return "status-complete";
+      case "in progress":
+        return "status-in-progress";
+      case "pending":
+        return "status-pending";
+      case "hold":
+        return "status-hold";
+      default:
+        return "status-unknown";
+    }
+  };
 
-    if (loading) return <CircularProgress sx={{ display: 'block', margin: 'auto' }} />;
-    if (error) return <Typography color="error">{error}</Typography>;
-
-    const handleTabChange = (event, newValue) => setActiveTab(newValue);
-
+  if (loading) {
     return (
-        <Box sx={{ maxWidth: 1500, mx: 'auto', p: 1 }}>
-            {/* Profile Section */}
-            <Card sx={{ display: 'flex', alignItems: 'center', p: 3, boxShadow: 3 }}>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <Avatar sx={{ width: 100, height: 100 }} src={employeeData?.Pic} />
-                </motion.div>
-                <Box sx={{ ml: 3 }}>
-                    <Typography variant="h5" fontWeight="bold">{employeeData?.Name || 'N/A'}</Typography>
-                    <Typography color="textSecondary">{employeeData?.Designation || 'N/A'}</Typography>
-                    <Typography color="textSecondary">Emp ID: {employeeData?.EmpId || 'N/A'}</Typography>
-                </Box>
-            </Card>
-            {/* <UserProfile/> */}
-            <Divider sx={{ my: 3 }} />
-
-            {/* Tabs Section */}
-            <Tabs value={activeTab} onChange={handleTabChange} variant="fullWidth" sx={{ mb: 3 }}>
-                <Tab label="Attendance" />
-                <Tab label="Leave" />
-                <Tab label="Expense" />
-                <Tab label="Assets" />
-            </Tabs>
-
-            {/* Attendance Tab */}
-            {activeTab === 0 && (
-                <Table component={Paper} sx={{ p: 2 }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Date</TableCell>
-                            <TableCell>In</TableCell>
-                            <TableCell>Out</TableCell>
-                            <TableCell>Working Hours</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {attendanceDetails.slice(0, 7).map((day, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{day.date}</TableCell>
-                                <TableCell>{day.firstIn}</TableCell>
-                                <TableCell>{day.lastOut}</TableCell>
-                                <TableCell>{day.workingHours} hrs</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            )}
-
-            {/* Leave Tab */}
-            {activeTab === 1 && (
-                <Card sx={{ p: 3, boxShadow: 2 }}>
-                    <Typography variant="h6">Sick Leave Balance: {leaveDetails?.SL || 0}</Typography>
-                    <LinearProgress variant="determinate" value={(leaveDetails?.SL / 12) * 100} />
-                </Card>
-            )}
-
-            {/* Expense Tab */}
-            {activeTab === 2 && (
-                <List>
-                    {expenseDetails.map((expense) => (
-                        <ListItem key={expense.detailId}>
-                            <ListItemAvatar>
-                                <Avatar src={expense.image} />
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={`${expense.expenseType} - ₹${expense.expenseAmount}`}
-                                secondary={`Date: ${expense.expenseDate} | Status: ${expense.Status}`}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-            )}
-
-            {/* Assets Tab */}
-            {activeTab === 3 && (
-                <Table component={Paper} sx={{ p: 2 }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Asset</TableCell>
-                            <TableCell>Make</TableCell>
-                            <TableCell>Model</TableCell>
-                            <TableCell>Serial No.</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {assetDetails.map((asset, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{asset.asset_name}</TableCell>
-                                <TableCell>{asset.make_name}</TableCell>
-                                <TableCell>{asset.model_name}</TableCell>
-                                <TableCell>{asset.serial_number}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            )}
-        </Box>
+      <div className="dashboard-loading">
+        <div className="spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
     );
-};
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-error">
+        <div className="error-message">{error}</div>
+        <button onClick={fetchDashboardData} className="retry-button">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="dashboard-error">
+        <div className="error-message">No data available</div>
+        <button onClick={fetchDashboardData} className="retry-button">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const { total_job_cards, total_tasks, status_summary, milestone_summary } = dashboardData;
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Production Dashboard</h1>
+        <button onClick={fetchDashboardData} className="refresh-button">
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="summary-cards">
+        <div className="summary-card total-jobs">
+          <div className="card-icon">📋</div>
+          <div className="card-content">
+            <h3 className="card-value">{total_job_cards}</h3>
+            <p className="card-label">Total Job Cards</p>
+          </div>
+        </div>
+
+        <div className="summary-card total-tasks">
+          <div className="card-icon">✅</div>
+          <div className="card-content">
+            <h3 className="card-value">{total_tasks}</h3>
+            <p className="card-label">Total Tasks</p>
+          </div>
+        </div>
+
+        <div className="summary-card completed-tasks">
+          <div className="card-icon">🏆</div>
+          <div className="card-content">
+            <h3 className="card-value">{status_summary?.Complete || 0}</h3>
+            <p className="card-label">Completed Tasks</p>
+          </div>
+        </div>
+
+        <div className="summary-card in-progress-tasks">
+          <div className="card-icon">⚡</div>
+          <div className="card-content">
+            <h3 className="card-value">{status_summary?.["In Progress"] || 0}</h3>
+            <p className="card-label">In Progress</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-content">
+        {/* Status Summary */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Task Status Overview</h2>
+          </div>
+          <div className="status-cards">
+            {Object.entries(status_summary || {}).map(([status, count]) => (
+              <div key={status} className={`status-card ${getStatusClass(status)}`}>
+                <div className="status-header">
+                  <span 
+                    className="status-indicator"
+                    style={{ backgroundColor: getStatusColor(status) }}
+                  ></span>
+                  <h4 className="status-name">{status}</h4>
+                </div>
+                <div className="status-count">{count}</div>
+                <div className="status-percentage">
+                  {Math.round((count / total_tasks) * 100)}%
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Milestone Summary */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Milestone Progress</h2>
+          </div>
+          <div className="milestone-cards">
+            {Object.entries(milestone_summary || {}).map(([milestone, data]) => (
+              <div key={milestone} className="milestone-card">
+                <div className="milestone-header">
+                  <h3 className="milestone-name">{milestone}</h3>
+                  <span className="milestone-total">Total: {data.total}</span>
+                </div>
+                
+                <div className="milestone-progress">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ 
+                        width: `${((data.Complete || 0) / data.total) * 100}%`,
+                        backgroundColor: getStatusColor("Complete")
+                      }}
+                    ></div>
+                  </div>
+                  <div className="progress-text">
+                    {Math.round(((data.Complete || 0) / data.total) * 100)}% Complete
+                  </div>
+                </div>
+
+                <div className="milestone-statuses">
+                  <div className="status-item">
+                    <span className="status-dot pending"></span>
+                    <span>Pending: {data.Pending || 0}</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot in-progress"></span>
+                    <span>In Progress: {data["In Progress"] || 0}</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot hold"></span>
+                    <span>Hold: {data.Hold || 0}</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot complete"></span>
+                    <span>Complete: {data.Complete || 0}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        
+      </div>
+    </div>
+  );
+}
 
 export default DashboardData;

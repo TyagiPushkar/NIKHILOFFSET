@@ -123,7 +123,36 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
       </Box>
 
       <List sx={{ flexGrow: 1, px: 1 }}>
-        
+        <ListItem
+          button
+          component={Link}
+          to="/dashboard"
+          selected={location.pathname === "/dashboard"}
+          sx={{
+            borderRadius: "10px",
+            mb: 1,
+            color: location.pathname === "/dashboard" ? "#344C7D" : "#666",
+            backgroundColor: location.pathname === "/dashboard" ? "rgba(246, 147, 32, 0.08)" : "transparent",
+            "&:hover": {
+              backgroundColor: location.pathname === "/dashboard" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+            },
+            transition: "all 0.2s ease",
+          }}
+        >
+          <Dashboard
+            sx={{
+              mr: 2,
+              color: "inherit",
+              fontSize: "1.2rem",
+            }}
+          />
+          <ListItemText
+            primary="Dashboard"
+            primaryTypographyProps={{
+              fontWeight: location.pathname === "/dashboard" ? 600 : 500,
+            }}
+          />
+        </ListItem>
 <ListItem
           button
           component={Link}
@@ -154,7 +183,37 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             }}
           />
         </ListItem>
-        
+         
+        <ListItem
+          button
+          component={Link}
+          to="/tasks"
+          selected={location.pathname === "/tasks"}
+          sx={{
+            borderRadius: "10px",
+            mb: 1,
+            color: location.pathname === "/tasks" ? "#344C7D" : "#666",
+            backgroundColor: location.pathname === "/tasks" ? "rgba(246, 147, 32, 0.08)" : "transparent",
+            "&:hover": {
+              backgroundColor: location.pathname === "/tasks" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+            },
+            transition: "all 0.2s ease",
+          }}
+        >
+          <Dashboard
+            sx={{
+              mr: 2,
+              color: "inherit",
+              fontSize: "1.2rem",
+            }}
+          />
+          <ListItemText
+            primary="Tasks"
+            primaryTypographyProps={{
+              fontWeight: location.pathname === "/tasks" ? 600 : 500,
+            }}
+          />
+        </ListItem>
       </List>
 
       {user && (

@@ -44,10 +44,12 @@ function Sidebar() {
 
   // Default routes visible to everyone
   const defaultRoutes = [
+    { path: "/dashboard", name: "Dashboard", icon: <SummarizeIcon /> },
     { path: "/employees", name: "Employees", icon: <Person /> },
     { path: "/attendance", name: "Attendance", icon: <DynamicFormIcon /> },
     { path: "/job-card-list", name: "Job Cards", icon: <BadgeIcon /> },
    { path: "/visit", name: "Visit", icon: <MapIcon /> },
+      { path: "/tasks", name: "Tasks", icon: <EngineeringIcon /> },
   ]
 
   const userModules = user?.modules || []

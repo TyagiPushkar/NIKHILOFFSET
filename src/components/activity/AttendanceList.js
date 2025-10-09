@@ -325,7 +325,7 @@ const AttendanceList = () => {
   const [employees, setEmployees] = useState([])
   const [students, setStudents] = useState([])
   const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [selectedEmpId, setSelectedEmpId] = useState(user.role === "HR" ? "" : user.emp_id)
+  const [selectedEmpId, setSelectedEmpId] = useState(user.role === "HR" || user.role === "Admin" ? "" : user.emp_id)
   const [allActivities, setAllActivities] = useState([])
   const [filteredActivities, setFilteredActivities] = useState([])
   const [holidays, setHolidays] = useState([])
@@ -840,7 +840,7 @@ const fetchStudents = async () => {
 
         {/* Controls Section */}
         <Grid container spacing={2} alignItems="center">
-          {user.role === "HR" && (
+          {user.role === "HR" || user.role === "Admin" && (
   <Grid item xs={12} sm={6} md={3}>
     <Autocomplete
       options={viewType === "employee" ? employees : students}
