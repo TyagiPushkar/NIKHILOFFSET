@@ -358,19 +358,7 @@ function TaskList() {
       )}
 
       {/* Status Legend */}
-      <div className="status-legend">
-        <h4>Status Flow:</h4>
-        <div className="status-flow">
-          <span className="status-item pending">Pending</span>
-          <span className="flow-arrow">→</span>
-          <span className="status-item in-progress">In Progress</span>
-          <span className="flow-arrow">→</span>
-          <span className="status-item complete">Complete</span>
-          <div className="flow-note">
-            Start available for Pending and Hold. Hold available only from In Progress.
-          </div>
-        </div>
-      </div>
+    
 
       <div className="table-container">
         <table className="task-table">
