@@ -135,7 +135,8 @@
   font-size: 14px;
 }
 
-.task-table thead {
+/* scope mobile header hide to only the main task table header */
+.task-table > thead {
   display: none; /* Hide header on mobile */
 }
 
@@ -305,6 +306,7 @@
   background-color: #f8f9fa;
   border-radius: 8px;
   margin: 8px 0;
+  width: 100%;
 }
 
 .audit-history-cell {
@@ -332,10 +334,16 @@
 }
 
 .audit-history-table-container {
+  width: 100%;
   overflow-x: auto;
   background: #fff;
   border-radius: 6px;
   border: 1px solid #e9ecef;
+}
+
+/* ensure nested audit table header is always visible */
+.audit-history-table thead {
+  display: table-header-group;
 }
 
 .audit-history-table {
@@ -446,8 +454,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* No Tasks */
@@ -463,37 +475,38 @@
   .task-list-container {
     padding: 24px;
   }
-  
+
   .task-list-actions {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .search-container {
     width: auto;
     min-width: 300px;
   }
-  
+
   .status-flow {
     flex-direction: row;
     align-items: center;
   }
-  
+
   .flow-note {
     margin-top: 0;
     margin-left: 12px;
   }
-  
+
   .task-table {
     display: table;
   }
-  
-  .task-table thead {
+
+  /* restore only the main task table header on desktop */
+  .task-table > thead {
     display: table-header-group;
     background-color: #f8f9fa;
   }
-  
+
   .task-table th {
     padding: 12px 16px;
     text-align: left;
@@ -502,12 +515,12 @@
     border-bottom: 2px solid #e9ecef;
     font-size: 14px;
   }
-  
+
   .task-table tbody {
     display: table-row-group;
     padding: 0;
   }
-  
+
   .task-row {
     display: table-row;
     background: transparent;
@@ -517,40 +530,53 @@
     margin-bottom: 0;
     box-shadow: none;
   }
-  
+
   .task-row > td {
     display: table-cell;
     padding: 12px 16px;
     border-bottom: 1px solid #e9ecef;
     justify-content: normal;
   }
-  
+
   .task-row > td::before {
     display: none;
   }
-  
+
   .task-row:hover {
     background-color: #f8f9fa;
   }
-  
+
   .action-container {
     width: auto;
   }
-  
+
   .action-select {
     width: 160px;
   }
-  
+
   .audit-toggle-button {
     width: auto;
     min-width: 120px;
   }
-  
+
+  /* Keep audit row/table semantics intact on desktop */
+  .audit-history-row {
+    display: table-row;
+    background: transparent;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .audit-history-cell {
+    display: table-cell;
+    padding: 0 !important;
+  }
+
   .audit-history-table {
     min-width: auto;
     font-size: 13px;
   }
-  
+
   .audit-remarks {
     max-width: 200px;
   }
@@ -562,15 +588,15 @@
     max-width: 1200px;
     margin: 0 auto;
   }
-  
+
   .search-input {
     min-width: 400px;
   }
-  
+
   .action-select {
     width: 180px;
   }
-  
+
   .audit-remarks {
     max-width: 300px;
   }

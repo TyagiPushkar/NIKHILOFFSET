@@ -96,7 +96,7 @@ function DashboardData() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1 className="dashboard-title">Production Dashboard</h1>
+        <h1 className="dashboard-title">Dashboard</h1>
         <button onClick={fetchDashboardData} className="refresh-button">
           🔄 Refresh
         </button>
@@ -138,30 +138,7 @@ function DashboardData() {
       </div>
 
       <div className="dashboard-content">
-        {/* Status Summary */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">Task Status Overview</h2>
-          </div>
-          <div className="status-cards">
-            {Object.entries(status_summary || {}).map(([status, count]) => (
-              <div key={status} className={`status-card ${getStatusClass(status)}`}>
-                <div className="status-header">
-                  <span 
-                    className="status-indicator"
-                    style={{ backgroundColor: getStatusColor(status) }}
-                  ></span>
-                  <h4 className="status-name">{status}</h4>
-                </div>
-                <div className="status-count">{count}</div>
-                <div className="status-percentage">
-                  {Math.round((count / total_tasks) * 100)}%
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+        
         {/* Milestone Summary */}
         <div className="dashboard-section">
           <div className="section-header">
@@ -212,9 +189,6 @@ function DashboardData() {
             ))}
           </div>
         </div>
-
-        {/* Quick Stats */}
-        
       </div>
     </div>
   );
