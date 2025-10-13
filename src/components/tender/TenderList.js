@@ -128,19 +128,15 @@ function TenderList() {
                     <td>{nameEntry?.Value || "-"}</td>
                     <td>{formatDate(record.Datetime)}</td>
                     <td>
-  <button
-    className="view-button"
-    onClick={() =>
-      window.open(
-        'https://wa.me/8053753044?text=Job card created and start the Pre-Press work',
-        '_blank'
-      )
-    }
-  >
-    <span className="view-icon">👁️</span>
-  </button>
-</td>
-
+                      <button
+                        className="view-button"
+                        onClick={() =>
+                          navigate(`/tender/view/${record.ActivityId}`)
+                        }
+                      >
+                        <span className="view-icon">👁️</span>
+                      </button>
+                    </td>
                   </tr>
                 );
               })
