@@ -30,6 +30,7 @@ import SummaryReport from './pages/Summary';
 import Dashboard from './pages/Dashboard';
 import VisitReport from './pages/VisitReport';
 import Task from './pages/Task';
+import DisableZoom from './pages/DisableZoom';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -46,9 +47,11 @@ function App() {
   
   return (
     <ThemeProvider theme={theme}>
+      <DisableZoom />
       <AuthProvider>
         <Router>
           <Routes>
+            
             <Route path="/" element={<PrivateRoute element={User} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/employees" element={<PrivateRoute element={Employee} />} />

@@ -25,10 +25,12 @@ import {
 } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import {ArrowLeft} from 'lucide-react'
+
 function AdmissionFormLogic() {
   const [pages, setPages] = useState([])
   const [checkpoints, setCheckpoints] = useState([])
   const [types, setTypes] = useState([])
+  const [supportEngineers, setSupportEngineers] = useState([])
   const [currentPage, setCurrentPage] = useState(0)
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState({})
@@ -36,44 +38,45 @@ function AdmissionFormLogic() {
   const [loading, setLoading] = useState(true)
   const [loadingError, setLoadingError] = useState("")
   const navigate = useNavigate()
-const StyledButton = ({ children, primary, ...props }) => {
-  const baseStyle = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "8px 16px",
-    borderRadius: "8px",
-    fontWeight: "600",
-    fontSize: "14px",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    border: "none",
-    outline: "none",
-    ...props.style,
+
+  const StyledButton = ({ children, primary, ...props }) => {
+    const baseStyle = {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "8px 16px",
+      borderRadius: "8px",
+      fontWeight: "600",
+      fontSize: "14px",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      border: "none",
+      outline: "none",
+      ...props.style,
+    }
+
+    const primaryStyle = {
+      ...baseStyle,
+      backgroundColor: "#344C7D",
+      color: "white",
+      boxShadow: "0 4px 10px rgba(246, 147, 32, 0.2)",
+    }
+
+    const secondaryStyle = {
+      ...baseStyle,
+      backgroundColor: "#f8f9fa",
+      color: "#333",
+      border: "1px solid #e0e0e0",
+    }
+
+    const style = primary ? primaryStyle : secondaryStyle
+
+    return (
+      <button {...props} style={style}>
+        {children}
+      </button>
+    )
   }
-
-  const primaryStyle = {
-    ...baseStyle,
-    backgroundColor: "#344C7D",
-    color: "white",
-    boxShadow: "0 4px 10px rgba(246, 147, 32, 0.2)",
-  }
-
-  const secondaryStyle = {
-    ...baseStyle,
-    backgroundColor: "#f8f9fa",
-    color: "#333",
-    border: "1px solid #e0e0e0",
-  }
-
-  const style = primary ? primaryStyle : secondaryStyle
-
-  return (
-    <button {...props} style={style}>
-      {children}
-    </button>
-  )
-}
 
   // Amount fields configuration
   const amountFieldIds = [62, 64, 66, 70];
@@ -90,31 +93,49 @@ const StyledButton = ({ children, primary, ...props }) => {
     }).format(num)
   }
 
-  // Calculate sum whenever any amount field changes
- // Calculate total bid value whenever any amount field changes
-useEffect(() => {
-  // Get all the required field values
-  const field61 = parseFloat(formData[61]) || 0;  // Quantity 1
-  const field62 = parseFloat(formData[62]) || 0;  // Rate 1
-  const field63 = parseFloat(formData[63]) || 0;  // Quantity 2
-  const field64 = parseFloat(formData[64]) || 0;  // Rate 2
-  const field65 = parseFloat(formData[65]) || 0;  // Quantity 3
-  const field66 = parseFloat(formData[66]) || 0;  // Rate 3
-  const field69 = parseFloat(formData[69]) || 0;  // Quantity 4
-  const field70 = parseFloat(formData[70]) || 0;  // Rate 4
+  // Calculate total bid value whenever any amount field changes
+  useEffect(() => {
+    // Get all the required field values
+    const field61 = parseFloat(formData[61]) || 0;  // Quantity 1
+    const field62 = parseFloat(formData[62]) || 0;  // Rate 1
+    const field63 = parseFloat(formData[63]) || 0;  // Quantity 2
+    const field64 = parseFloat(formData[64]) || 0;  // Rate 2
+    const field65 = parseFloat(formData[65]) || 0;  // Quantity 3
+    const field66 = parseFloat(formData[66]) || 0;  // Rate 3
+    const field69 = parseFloat(formData[69]) || 0;  // Quantity 4
+    const field70 = parseFloat(formData[70]) || 0;  // Rate 4
 
-  // Calculate the total using the formula
-  const total = (field61 * field62) + 
-                (field63 * field64) + 
-                (field65 * field66) + 
-                (field69 * field70);
+    // Calculate the total using the formula
+    const total = (field61 * field62) + 
+                  (field63 * field64) + 
+                  (field65 * field66) + 
+                  (field69 * field70);
 
-  // Update total field if sum has changed
-  if (formData[totalFieldId] !== total.toString()) {
-    handleChange(totalFieldId, total.toFixed(2));
+    // Update total field if sum has changed
+    if (formData[totalFieldId] !== total.toString()) {
+      handleChange(totalFieldId, total.toFixed(2));
+    }
+  }, [formData[61], formData[62], formData[63], formData[64], 
+      formData[65], formData[66], formData[69], formData[70]]);
+
+  // Fetch support engineers
+  const fetchSupportEngineers = async () => {
+    try {
+      const response = await axios.get("https://namami-infotech.com/NIKHILOFFSET/src/menu/get_support_engineer.php?menuid=2")
+      if (response.data.success) {
+        setSupportEngineers(response.data.data)
+      }
+    } catch (error) {
+      console.error("Error fetching support engineers:", error)
+    }
   }
-}, [formData[61], formData[62], formData[63], formData[64], 
-    formData[65], formData[66], formData[69], formData[70]]);
+
+  // Redirect to WhatsApp
+  const redirectToWhatsApp = (engineer) => {
+    const message = `Job card created and start the ${engineer.milestone} work`
+    const whatsappUrl = `https://wa.me/${engineer.mobile_no}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
+  }
 
   const handleChange = (id, value) => {
     setFormData((prev) => ({ ...prev, [id]: value }))
@@ -213,6 +234,9 @@ useEffect(() => {
         setPages(checkpointIds)
         setCheckpoints(checkpointRes.data.data)
         setTypes(typeRes.data.data)
+        
+        // Fetch support engineers
+        await fetchSupportEngineers()
       } catch (error) {
         console.error("Error fetching data:", error)
         setLoadingError("Failed to load form data. Please try again later.")
@@ -782,12 +806,17 @@ useEffect(() => {
               })
             }
 
+            // Show success message and redirect to WhatsApp
             Swal.fire({
               icon: "success",
               title: isDraft ? "Draft Saved" : "Form Submitted",
               text: isDraft ? "Your draft has been saved successfully!" : "Your form has been submitted successfully!",
               confirmButtonColor: "#344C7D",
             }).then(() => {
+              // Redirect to WhatsApp for the first support engineer
+              if (supportEngineers.length > 0 && !isDraft) {
+                redirectToWhatsApp(supportEngineers[0])
+              }
               navigate("/job-card-list")
             })
           } catch (error) {
@@ -851,9 +880,7 @@ useEffect(() => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 0, mb: 4 }}>
-      
-
-       <Stepper
+      <Stepper
         activeStep={currentPage}
         alternativeLabel
         sx={{
@@ -871,9 +898,7 @@ useEffect(() => {
             <StepLabel>Step {index + 1}</StepLabel>
           </Step>
         ))}
-      </Stepper> 
-
-      
+      </Stepper>
 
       <Box sx={{ mb: 3 }}>
         {pageData.map((id) => {
@@ -887,11 +912,13 @@ useEffect(() => {
           return renderCheckpointWithDependents(cp, pageData)
         })}
       </Box>
-<Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Step {currentPage + 1} of {pages.length}
         </Typography>
       </Box>
+
       <Box sx={{ display: "flex", gap: 2, justifyContent: "center", mt: 3 }}>
         {currentPage > 0 && (
           <Button
@@ -912,20 +939,6 @@ useEffect(() => {
 
         {currentPage === pages.length - 1 ? (
           <>
-            {/* <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#757575",
-                color: "white",
-                minWidth: "120px",
-                "&:hover": {
-                  backgroundColor: "#616161",
-                },
-              }}
-              onClick={() => handleSubmit(true)}
-            >
-              Save Draft
-            </Button> */}
             <Button
               variant="contained"
               sx={{
@@ -967,22 +980,23 @@ useEffect(() => {
           Your progress is saved as you navigate between steps
         </Typography>
       </Box>
+
       <div
-              style={{
-                position: "fixed",
-                top: "70px",
-                left: "20px",
-                zIndex: 100,
-              }}
-            >
-              <StyledButton
-                  primary
-                  onClick={() => navigate(-1)}
-                  style={{ padding: "8px", borderRadius: "50%", minWidth: "40px", minHeight: "40px" }}
-                >
-                  <ArrowLeft size={20} />
-                </StyledButton>
-            </div>
+        style={{
+          position: "fixed",
+          top: "70px",
+          left: "20px",
+          zIndex: 100,
+        }}
+      >
+        <StyledButton
+          primary
+          onClick={() => navigate(-1)}
+          style={{ padding: "8px", borderRadius: "50%", minWidth: "40px", minHeight: "40px" }}
+        >
+          <ArrowLeft size={20} />
+        </StyledButton>
+      </div>
     </Container>
   )
 }
