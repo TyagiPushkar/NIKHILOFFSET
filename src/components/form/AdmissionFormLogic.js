@@ -678,7 +678,7 @@ function AdmissionFormLogic() {
     })
   }
 
-  const handleSubmit = async (isDraft = false) => {
+    const handleSubmit = async (isDraft = false) => {
     if (!isDraft) {
       const newErrors = {}
       let hasErrors = false
@@ -806,19 +806,32 @@ function AdmissionFormLogic() {
               })
             }
 
-            // Show success message and redirect to WhatsApp
-            Swal.fire({
+            // Close loading Swal first
+            Swal.close()
+
+            // Show success message
+            await Swal.fire({
               icon: "success",
               title: isDraft ? "Draft Saved" : "Form Submitted",
               text: isDraft ? "Your draft has been saved successfully!" : "Your form has been submitted successfully!",
               confirmButtonColor: "#344C7D",
-            }).then(() => {
-              // Redirect to WhatsApp for the first support engineer
-              if (supportEngineers.length > 0 && !isDraft) {
-                redirectToWhatsApp(supportEngineers[0])
-              }
-              navigate("/job-card-list")
             })
+
+            // Redirect to WhatsApp for the first support engineer after success message
+            if (supportEngineers.length > 0 && !isDraft) {
+              const engineer = supportEngineers[0]
+              const message = `Job card created and start the ${engineer.milestone} work`
+              const whatsappUrl = `https://wa.me/${engineer.mobile_no}?text=${encodeURIComponent(message)}`
+              
+              // Use window.location for better compatibility with WebView
+              setTimeout(() => {
+                window.location.href = whatsappUrl
+              }, 100)
+            }
+
+            // Navigate to job card list
+            navigate("/job-card-list")
+
           } catch (error) {
             console.error("Submission error", error)
             Swal.fire({
