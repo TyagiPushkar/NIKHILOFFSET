@@ -39,20 +39,6 @@ function AdmissionFormLogic() {
   const [loadingError, setLoadingError] = useState("")
   const navigate = useNavigate()
 
-  // Add this inside your component function, after the state declarations
-useEffect(() => {
-  // Listen for messages from Flutter if needed
-  const handleMessage = (event) => {
-    // You can handle messages from Flutter here if needed
-    console.log('Message from Flutter:', event.data);
-  };
-
-  window.addEventListener('message', handleMessage);
-  
-  return () => {
-    window.removeEventListener('message', handleMessage);
-  };
-}, []);
   const StyledButton = ({ children, primary, ...props }) => {
     const baseStyle = {
       display: "inline-flex",
@@ -691,6 +677,7 @@ useEffect(() => {
       reader.onerror = (error) => reject(error)
     })
   }
+
   const handleSubmit = async (isDraft = false) => {
     if (!isDraft) {
       const newErrors = {}
@@ -819,58 +806,19 @@ useEffect(() => {
               })
             }
 
-            // Close loading Swal first
-            Swal.close()
-
-            // Show success message
-            await Swal.fire({
+            // Show success message and redirect to WhatsApp
+            Swal.fire({
               icon: "success",
               title: isDraft ? "Draft Saved" : "Form Submitted",
               text: isDraft ? "Your draft has been saved successfully!" : "Your form has been submitted successfully!",
               confirmButtonColor: "#344C7D",
+            }).then(() => {
+              // Redirect to WhatsApp for the first support engineer
+              if (supportEngineers.length > 0 && !isDraft) {
+                redirectToWhatsApp(supportEngineers[0])
+              }
+              navigate("/job-card-list")
             })
-
-            // Send message to Flutter to open WhatsApp
-            if (supportEngineers.length > 0 && !isDraft) {
-              const engineer = supportEngineers[0]
-              const message = `Job card created and start the ${engineer.milestone} work`
-              
-              // Method 1: Using window.flutter_inappwebview if available
-              if (window.flutter_inappwebview) {
-                window.flutter_inappwebview.callHandler('openWhatsApp', engineer.mobile_no, message);
-              }
-              // Method 2: Using window.chrome.webview if available
-              else if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({
-                  action: 'openWhatsApp',
-                  phone: engineer.mobile_no,
-                  message: message
-                });
-              }
-              // Method 3: Using window.PostMessage for standard WebView
-              else if (window.ReactNativeWebView) {
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  action: 'openWhatsApp',
-                  phone: engineer.mobile_no,
-                  message: message
-                }));
-              }
-              // Method 4: Fallback to custom event
-              else {
-                const event = new CustomEvent('flutterMessage', {
-                  detail: {
-                    type: 'openWhatsApp',
-                    phone: engineer.mobile_no,
-                    message: message
-                  }
-                });
-                window.dispatchEvent(event);
-              }
-            }
-
-            // Navigate to job card list
-            navigate("/job-card-list")
-
           } catch (error) {
             console.error("Submission error", error)
             Swal.fire({
