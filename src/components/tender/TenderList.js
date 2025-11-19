@@ -81,9 +81,9 @@ function TenderList() {
     
     switch (status) {
       case "Complete":
-        return { text: `Completed - ${milestone}`, className: "status-complete" };
+        return { text: `Completed`, className: "status-complete" };
       case "Pending":
-        return { text: `In Progress - ${milestone}`, className: "status-pending" };
+        return { text: `WIP - ${milestone}`, className: "status-pending" };
       case "Hold":
         return { text: `On Hold - ${milestone}`, className: "status-hold" };
       default:
