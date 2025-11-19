@@ -161,7 +161,6 @@ function TenderList() {
         <table className="tender-table">
           <thead>
             <tr>
-              <th>Job No</th>
               <th>Job Name</th>
               <th>Status</th>
             </tr>
@@ -180,7 +179,6 @@ function TenderList() {
                             state: { tempId: record.TempId },
                           })
                         }>
-                    <td>{record.TempId || "-"}</td>
                     <td>{nameEntry?.Value || "-"}</td>
                     <td>
                       <span className={`status-badge ${statusInfo.className}`}>
