@@ -161,43 +161,33 @@ function TenderList() {
         <table className="tender-table">
           <thead>
             <tr>
-              <th>Job Card</th>
-              <th>Client</th>
-              <th>Date</th>
+              <th>Job No</th>
+              <th>Job Name</th>
               <th>Status</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {currentRecords.length > 0 ? (
               currentRecords.map((record) => {
                 const nameEntry = record.chkData?.find(
-                  (chk) => chk.ChkId === "3"
+                  (chk) => chk.ChkId === "5"
                 );
                 const statusInfo = getStatusDisplay(record);
 
                 return (
-                  <tr key={record.ID}>
+                  <tr style={{cursor:"pointer"}} key={record.ID} onClick={() =>
+                          navigate(`/tender/view/${record.ActivityId}`, {
+                            state: { tempId: record.TempId },
+                          })
+                        }>
                     <td>{record.TempId || "-"}</td>
                     <td>{nameEntry?.Value || "-"}</td>
-                    <td>{formatDate(record.Datetime)}</td>
                     <td>
                       <span className={`status-badge ${statusInfo.className}`}>
                         {statusInfo.text}
                       </span>
                     </td>
-                    <td>
-                      <button
-                        className="view-button"
-                        onClick={() =>
-                          navigate(`/tender/view/${record.ActivityId}`, {
-                            state: { tempId: record.TempId },
-                          })
-                        }
-                      >
-                        <span className="view-icon">👁️</span>
-                      </button>
-                    </td>
+                    
                   </tr>
                 );
               })
