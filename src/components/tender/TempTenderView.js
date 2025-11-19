@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import * as XLSX from "xlsx"; // Import the xlsx library
 import {
@@ -28,6 +28,11 @@ import {
   Download,
 } from "lucide-react"
 import logo from "../../assets/images (1).png"
+
+// Import jsPDF for PDF generation
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 
 // Custom styled components using template literals
 const StyledContainer = ({ children, ...props }) => {
@@ -455,7 +460,6 @@ const StyledSectionHeader = ({ title, icon, onToggle, isCollapsed, count, ...pro
   )
 }
 
-// Icon mapping for field types
 const getIconForField = (fieldName) => {
   const fieldNameLower = fieldName.toLowerCase()
   if (fieldNameLower.includes("name")) return <User size={16} />
@@ -467,9 +471,12 @@ const getIconForField = (fieldName) => {
   if (fieldNameLower.includes("document") || fieldNameLower.includes("certificate")) return <FileCheck size={16} />
   return <Briefcase size={16} />
 }
+// ... (keep all your existing styled components exactly as they are)
 
 function TempTenderView() {
   const { activityId } = useParams()
+   const location = useLocation();
+  const tempId = location.state?.tempId;
   const [details, setDetails] = useState([])
   const [checkpoints, setCheckpoints] = useState({})
   const [loading, setLoading] = useState(true)
@@ -497,14 +504,17 @@ function TempTenderView() {
   // Checkpoint groups
   const sections = {
     "Job Card": [1,2,3,4,5,6,7,8,9,10],
-    "PRE PRESS": [11,12,13,14,15,16,17,18,19,20],
-    "CUTTING": [21,22,23,24,25,26,27,28,29,30],
-    "PRINTING": [31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
-    "POST PRESS":[41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
+    "PRE PRESS": [11,12,13,14,15,16,17,18,19,20,52],
+    "CUTTING": [21,22,23,24,25,26,27,28,29,30,53],
+    "PRINTING": [31, 32, 33, 34, 35, 36, 37, 38, 39, 40,54],
+    "POST PRESS":[41, 42, 43, 44, 45, 46, 47, 48, 49, 50,55]
   }
 
   const candidateDetailsIds = [2, 4, 5, 7, 6, 18]
   const studentPhotoChkId = 3 // Assume 2 is the image URL
+
+  // Ref for PDF generation
+  const pdfRef = useRef();
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth)
@@ -647,6 +657,280 @@ function TempTenderView() {
     // Generate Excel file and trigger download
     XLSX.writeFile(wb, `tender-details-${activityId}.xlsx`);
   };
+
+  // Function to download PDF
+  const downloadPDF = async () => {
+    try {
+      setToast({
+        show: true,
+        message: "Generating PDF...",
+        type: "success"
+      });
+
+      // Create a new PDF instance
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Get the element to capture
+      const element = pdfRef.current;
+      
+      // Use html2canvas to capture the content
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      
+      // Calculate dimensions to fit the page
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10;
+      
+      // Add the image to PDF
+      pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      // Save the PDF
+      pdf.save(`job-card-${activityId}.pdf`);
+      
+      setToast({
+        show: true,
+        message: "PDF downloaded successfully!",
+        type: "success"
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setToast({
+        show: true,
+        message: "Failed to generate PDF",
+        type: "error"
+      });
+    }
+  };
+  // Function to download formatted PDF with proper text wrapping and center alignment
+const downloadFormattedPDF = async () => {
+  try {
+    setToast({
+      show: true,
+      message: "Generating Job Card PDF...",
+      type: "success"
+    });
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const margin = 10;
+    const pageWidth = pdf.internal.pageSize.getWidth() - 2 * margin;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    let currentY = 15;
+
+    // Add header
+    pdf.setFillColor(52, 76, 125); // #344C7D
+    pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 12, 'F');
+    
+    // Company Name
+    pdf.setFontSize(14);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont(undefined, 'bold');
+    pdf.text(`JOB CARD - ${getValueByChkId(5)} (${tempId})`, margin, 8);
+    
+    currentY = 18;
+
+    // Function to add a properly aligned section with dynamic row heights
+    const addSection = (title, data, startY) => {
+      let y = startY;
+      
+      // Check if we need a new page
+      if (y > pageHeight - 30) {
+        pdf.addPage();
+        y = margin + 5;
+      }
+      
+      // Section header
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, y, pageWidth, 6, 'F');
+      
+      pdf.setFontSize(12);
+      pdf.setTextColor(52, 76, 125);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(title, margin + 3, y + 4);
+      
+      y += 8;
+
+      // Medium font size for content
+      const fontSize = 9;
+      const baseRowHeight = 8;
+      const labelWidth = pageWidth * 0.35;
+      const valueWidth = pageWidth * 0.60;
+
+      data.forEach((item, index) => {
+        pdf.setFontSize(fontSize);
+        
+        // Calculate text height for both label and value
+        const labelLines = pdf.splitTextToSize(item.label, labelWidth - 8);
+        const value = item.value || "—";
+        const valueLines = pdf.splitTextToSize(value, valueWidth - 8);
+        
+        // Calculate required row height based on the maximum lines
+        const maxLines = Math.max(labelLines.length, valueLines.length);
+        const rowHeight = Math.max(baseRowHeight, maxLines * 3.5); // 3.5mm per line
+        
+        // Check if we need a new page
+        if (y + rowHeight > pageHeight - 15) {
+          pdf.addPage();
+          y = margin + 5;
+        }
+
+        // Draw row background - alternate colors for better readability
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 248, 248);
+        } else {
+          pdf.setFillColor(255, 255, 255);
+        }
+        pdf.rect(margin, y, pageWidth, rowHeight, 'F');
+        
+        // Draw border for the row
+        pdf.setDrawColor(220, 220, 220);
+        pdf.rect(margin, y, pageWidth, rowHeight);
+
+        // Label - bold and aligned properly
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(80, 80, 80);
+        
+        // Calculate vertical position for label (centered in available space)
+        const labelY = y + (rowHeight / 2) - ((labelLines.length - 1) * 1.5);
+        labelLines.forEach((line, lineIndex) => {
+          pdf.text(line, margin + 4, labelY + (lineIndex * 3.5));
+        });
+        
+        // Value - normal and aligned properly
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        // Calculate vertical position for value (centered in available space)
+        const valueY = y + (rowHeight / 2) - ((valueLines.length - 1) * 1.5);
+        valueLines.forEach((line, lineIndex) => {
+          pdf.text(line, margin + labelWidth + 4, valueY + (lineIndex * 3.5));
+        });
+
+        // Draw vertical separator line
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(margin + labelWidth, y, margin + labelWidth, y + rowHeight);
+
+        y += rowHeight;
+      });
+
+      return y + 5; // Add some space after section
+    };
+
+    // Prepare data for each section
+    const allSections = {
+      "JOB CARD": [
+        { label: "JOB DATE", value: getValueByChkId(2) },
+        { label: "Client Name", value: getValueByChkId(3) },
+        { label: "PO No.", value: getValueByChkId(4) },
+        { label: "Job Name", value: getValueByChkId(5) },
+        { label: "Receiving Date", value: getValueByChkId(6) },
+        { label: "Delivery Date", value: getValueByChkId(7) },
+        { label: "Dummy Approved", value: getValueByChkId(8) },
+        { label: "Quantity", value: getValueByChkId(10) },
+        { label: "Finished Size", value: getValueByChkId(11) },
+        { label: "No. of Pages", value: getValueByChkId(12) },
+        { label: "Orientation", value: getValueByChkId(13) }
+      ],
+      "PRE PRESS": [
+        { label: "Plates", value: getValueByChkId(15) },
+        { label: "Total Sets", value: getValueByChkId(16) },
+        { label: "Plated by Party", value: getValueByChkId(17) },
+        { label: "Plate Size", value: getValueByChkId(18) },
+        { label: "Number of Colors", value: getValueByChkId(19) },
+        { label: "Digital Dummy with farrows", value: getValueByChkId(20) },
+        { label: "Total No. of Plates", value: getValueByChkId(21) },
+        { label: "Pre Press Notes", value: getValueByChkId(52) }
+      ],
+      "CUTTING": [
+        { label: "Paper GSM", value: getValueByChkId(23) },
+        { label: "Ordered Size", value: getValueByChkId(24) },
+        { label: "Actual Print Size", value: getValueByChkId(25) },
+        { label: "Total Number of Sheets", value: getValueByChkId(26) },
+        { label: "Cover GSM", value: getValueByChkId(27) },
+        { label: "Actual GSM", value: getValueByChkId(28) },
+        { label: "Cutting Notes", value: getValueByChkId(53) }
+      ],
+      "PRINTING": [
+        { label: "Machine", value: getValueByChkId(30) },
+        { label: "Paper Size Cover", value: getValueByChkId(31) },
+        { label: "Paper Cover Final Cut Size", value: getValueByChkId(32) },
+        { label: "Paper Size Text", value: getValueByChkId(33) },
+        { label: "Paper Text Final Cut Size", value: getValueByChkId(34) },
+        { label: "Paper Size Other", value: getValueByChkId(35) },
+        { label: "Paper Other Final Cut Size", value: getValueByChkId(36) },
+        { label: "Job Quantity", value: getValueByChkId(37) },
+        { label: "Type", value: getValueByChkId(38) },
+        { label: "Used Sheets", value: getValueByChkId(39) },
+        { label: "Wastage Sheets", value: getValueByChkId(40) },
+        { label: "Total Sheets", value: getValueByChkId(41) },
+        { label: "Printing Notes", value: getValueByChkId(54) },
+        { label: "Lamination", value: getValueByChkId(47) },
+        { label: "UV", value: getValueByChkId(48) },
+        { label: "Aqueous Varnish", value: getValueByChkId(49) },
+      ],
+      "POST PRESS": [
+        { label: "Binding", value: getValueByChkId(43) },
+        { label: "Total Forms", value: getValueByChkId(44) },
+        { label: "Final Quantity", value: getValueByChkId(45) },
+        { label: "Finished Size", value: getValueByChkId(46) },
+        { label: "Delivery Address & Mobile No", value: getValueByChkId(50) },
+        { label: "Extra Fabrication", value: getValueByChkId(51) },
+        { label: "Post Press Notes", value: getValueByChkId(55) }
+      ]
+    };
+
+    // Add each section sequentially
+    Object.entries(allSections).forEach(([sectionTitle, sectionData]) => {
+      // Filter out empty values and trim whitespace
+      const filteredData = sectionData.filter(item => {
+        const value = item.value || "";
+        return value.toString().trim() !== "" && value.toString().trim() !== "—";
+      });
+      
+      if (filteredData.length > 0) {
+        currentY = addSection(sectionTitle, filteredData, currentY);
+      }
+    });
+
+    
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 100, 100);
+    
+    
+    
+
+    // Add page border
+    pdf.setDrawColor(180, 180, 180);
+    pdf.rect(margin - 2, 14, pageWidth + 4, pageHeight - 26);
+
+    // Save the PDF
+    pdf.save(`job-card-${tempId}.pdf`);
+
+    setToast({
+      show: true,
+      message: "Job Card PDF downloaded successfully!",
+      type: "success"
+    });
+  } catch (error) {
+    console.error('Error generating job card PDF:', error);
+    setToast({
+      show: true,
+      message: "Failed to generate Job Card PDF",
+      type: "error"
+    });
+  }
+};
 
   // Save changes
   const saveChanges = async () => {
@@ -1308,6 +1592,29 @@ const calculateGST = (amount) => {
 
         {/* Logo with decorative elements */}
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          {/* PDF Download Buttons */}
+          <div style={{ display: "flex", gap: "10px" }}>
+            <StyledButton 
+              // onClick={downloadPDF} 
+              onClick={downloadFormattedPDF}
+              primary
+              style={{ backgroundColor: "#d32f2f", display: "flex", alignItems: "center", gap: "5px" }}
+              title="Download as PDF (Screenshot)"
+            >
+              <Download size={16} />
+              Download PDF
+            </StyledButton>
+            
+            {/* <StyledButton 
+              onClick={downloadFormattedPDF} 
+              style={{ display: "flex", alignItems: "center", gap: "5px", border: "1px solid #344C7D", color: "#344C7D" }}
+              title="Download as Formatted PDF"
+            >
+              <FileText size={16} />
+              Formatted PDF
+            </StyledButton> */}
+          </div>
+          
           {/* <StyledButton onClick={cycleFieldVariant} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <Filter size={16} />
             Style: {fieldVariant.charAt(0).toUpperCase() + fieldVariant.slice(1)}
@@ -1339,8 +1646,8 @@ const calculateGST = (amount) => {
         </div>
       </StyledHeader>
 
-      {/* Main Content */}
-      <div style={{ margin: "0 auto" }}>
+      {/* Main Content with PDF ref */}
+      <div ref={pdfRef} style={{ margin: "0 auto" }}>
         {/* Tender Details */}
         {/* {renderStudentDetails()} */}
 

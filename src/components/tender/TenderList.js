@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from "xlsx"; // Import the xlsx library
-import "./TenderList.css"; // You would need to create this CSS file
+import * as XLSX from "xlsx";
+import "./TenderList.css";
 
 function TenderList() {
   const [tempRecords, setTempRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
+  const [taskStatus, setTaskStatus] = useState({}); // Store task status by activityId
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,25 +16,80 @@ function TenderList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTempData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(
-          "https://namami-infotech.com/NIKHILOFFSET/src/menu/get_temp.php?menuId=1"
-        );
-        if (response.data.success) {
-          setTempRecords(response.data.data);
-          setFilteredRecords(response.data.data);
+        // Fetch both temp data and task data in parallel
+        const [tempResponse, taskResponse] = await Promise.all([
+          axios.get("https://namami-infotech.com/NIKHILOFFSET/src/menu/get_temp.php?menuId=1"),
+          axios.get("https://namami-infotech.com/NIKHILOFFSET/src/task/get_task.php")
+        ]);
+
+        if (tempResponse.data.success) {
+          setTempRecords(tempResponse.data.data);
+          setFilteredRecords(tempResponse.data.data);
         } else {
-          setError("No data found.");
+          setError("No temp data found.");
+        }
+
+        if (taskResponse.data.success) {
+          // Process task data to get latest status for each activityId
+          const statusMap = processTaskData(taskResponse.data.data);
+          setTaskStatus(statusMap);
+        } else {
+          console.warn("No task data found.");
         }
       } catch (err) {
         setError("Failed to fetch data.");
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchTempData();
+    fetchData();
   }, []);
+
+  // Process task data to get the latest status for each activityId
+  const processTaskData = (taskData) => {
+    const statusMap = {};
+    
+    taskData.forEach(task => {
+      const { activityId, status, milestone, update_date } = task;
+      
+      // If we haven't seen this activityId, or if this task has a more recent update
+      if (!statusMap[activityId] || 
+          new Date(update_date) > new Date(statusMap[activityId].update_date)) {
+        statusMap[activityId] = {
+          status,
+          milestone,
+          update_date
+        };
+      }
+    });
+    
+    return statusMap;
+  };
+
+  // Get status display for a record
+  const getStatusDisplay = (record) => {
+    const taskInfo = taskStatus[record.ActivityId];
+    
+    if (!taskInfo) {
+      return { text: "Not Started", className: "status-not-started" };
+    }
+    
+    const { status, milestone } = taskInfo;
+    
+    switch (status) {
+      case "Complete":
+        return { text: `Completed - ${milestone}`, className: "status-complete" };
+      case "Pending":
+        return { text: `In Progress - ${milestone}`, className: "status-pending" };
+      case "Hold":
+        return { text: `On Hold - ${milestone}`, className: "status-hold" };
+      default:
+        return { text: `In Progress - ${milestone}`, className: "status-pending" };
+    }
+  };
 
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
@@ -60,16 +116,6 @@ function TenderList() {
     return `${day}/${month}/${year}`;
   };
 
-  // Function to determine row class based on awarded value
-  const getRowClass = (awardedValue) => {
-    if (awardedValue && awardedValue.toLowerCase().includes("sanchar")) {
-      return "awarded-sanchar";
-    }
-    return "awarded-other";
-  };
-
-
-
   const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
   const startIndex = page * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
@@ -87,11 +133,18 @@ function TenderList() {
   return (
     <div className="tender-list-container">
       <div className="tender-list-header">
-        
         <div className="tender-list-actions">
-
-        <h2 className="tender-list-title">Job Card List</h2>
-
+          <h2 className="tender-list-title">Job Card List</h2>
+          
+          <div className="search-container">
+            <input
+              type="text"
+              placeholder="Search by Job Card or Client..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="search-input"
+            />
+          </div>
 
           <button
             className="action-button new-tender-button"
@@ -111,6 +164,7 @@ function TenderList() {
               <th>Job Card</th>
               <th>Client</th>
               <th>Date</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -120,18 +174,25 @@ function TenderList() {
                 const nameEntry = record.chkData?.find(
                   (chk) => chk.ChkId === "3"
                 );
-                
+                const statusInfo = getStatusDisplay(record);
 
                 return (
-                  <tr key={record.ID} >
+                  <tr key={record.ID}>
                     <td>{record.TempId || "-"}</td>
                     <td>{nameEntry?.Value || "-"}</td>
                     <td>{formatDate(record.Datetime)}</td>
                     <td>
+                      <span className={`status-badge ${statusInfo.className}`}>
+                        {statusInfo.text}
+                      </span>
+                    </td>
+                    <td>
                       <button
                         className="view-button"
                         onClick={() =>
-                          navigate(`/tender/view/${record.ActivityId}`)
+                          navigate(`/tender/view/${record.ActivityId}`, {
+                            state: { tempId: record.TempId },
+                          })
                         }
                       >
                         <span className="view-icon">👁️</span>
@@ -142,7 +203,7 @@ function TenderList() {
               })
             ) : (
               <tr>
-                <td colSpan="6" className="no-records">
+                <td colSpan="5" className="no-records">
                   No records found
                 </td>
               </tr>
