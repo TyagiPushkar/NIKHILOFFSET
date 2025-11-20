@@ -135,17 +135,6 @@ function TenderList() {
       <div className="tender-list-header">
         <div className="tender-list-actions">
           <h2 className="tender-list-title">Job Card List</h2>
-          
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search by Job Card or Client..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="search-input"
-            />
-          </div>
-
           <button
             className="action-button new-tender-button"
             onClick={() => navigate("/create-job-card")}
