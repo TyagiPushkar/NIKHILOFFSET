@@ -497,7 +497,7 @@ function TempTenderView() {
   // Field style variant state
   const [fieldVariant, setFieldVariant] = useState("modern") // Options: default, modern, card, flat
 
-  // User state - check if user is admin
+  // User state - check if user is adminw
   const [user, setUser] = useState(null)
   const isAdmin = user?.emp_id === "NIOF005"
 

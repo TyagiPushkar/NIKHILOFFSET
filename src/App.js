@@ -31,6 +31,7 @@ import Dashboard from './pages/Dashboard';
 import VisitReport from './pages/VisitReport';
 import Task from './pages/Task';
 import DisableZoom from './pages/DisableZoom';
+import Clients from './pages/Clients';
 function App() {
    useEffect(() => {
         const handleRightClick = (event) => {
@@ -84,6 +85,10 @@ function App() {
             
             <Route path="/participant" element={<PrivateRoute element={Participant} />} />
             <Route path="/new-participant" element={<PrivateRoute element={Participant} />} />
+
+            <Route path="/clients" element={<PrivateRoute element={Clients} />} />
+            <Route path="/add-client" element={<PrivateRoute element={Clients} />} />
+
             
             
             <Route path="/projects" element={<PrivateRoute element={Projects} />} />
