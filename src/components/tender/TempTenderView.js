@@ -499,7 +499,7 @@ function TempTenderView() {
 
   // User state - check if user is admin
   const [user, setUser] = useState(null)
-  const isAdmin = user?.role === "Admin"
+  const isAdmin = user?.emp_id === "NIOF005"
 
   // Checkpoint groups
   const sections = {
@@ -1005,214 +1005,13 @@ const downloadFormattedPDF = async () => {
     return (
       <StyledCard highlight={true}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "15px" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Award size={20} color="#344C7D" style={{ marginRight: "10px" }} />
-            <StyledTitle level={2}>JOB CARD</StyledTitle>
-          </div>
+          
   
-          {isAdmin && (
-            <div>
-              {isEditing ? (
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <StyledButton
-                    onClick={saveChanges}
-                    primary
-                    disabled={isSaving}
-                    style={{ backgroundColor: "#4caf50" }}
-                  >
-                    {isSaving ? (
-                      "Saving..."
-                    ) : (
-                      <>
-                        <Save size={16} style={{ marginRight: "5px" }} />
-                        Save
-                      </>
-                    )}
-                  </StyledButton>
-                  <StyledButton onClick={toggleEditMode}>
-                    <X size={16} style={{ marginRight: "5px" }} />
-                    Cancel
-                  </StyledButton>
-                </div>
-              ) : (
-                <StyledButton onClick={toggleEditMode} primary>
-                  <Edit size={16} style={{ marginRight: "5px" }} />
-                  Edit Details
-                </StyledButton>
-              )}
-            </div>
-          )}
+        
         </div>
-        <StyledDivider />
+        
   
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Photo and basic info section */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: window.innerWidth < 768 ? "column" : "row",
-              gap: "20px",
-              alignItems: window.innerWidth < 768 ? "center" : "flex-start",
-            }}
-          >
-            {/* Photo Column */}
-            <div
-              style={{
-                flex: "0 0 auto",
-                textAlign: "center",
-                position: "relative",
-                padding: "10px",
-                background: "linear-gradient(135deg, #fff8e1 0%, #fffde7 100%)",
-                borderRadius: "12px",
-                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.05)",
-              }}
-            >
-              {isEditing ? (
-                <div style={{ marginBottom: '15px' }}>
-                  <FileUploadField
-                    chkId={studentPhotoChkId}
-                    currentValue={editedData[studentPhotoChkId] || getValueByChkId(studentPhotoChkId)}
-                    onChange={handleInputChange}
-                    isEditing={isEditing}
-                  />
-                </div>
-              ) : isPdfUrl(getValueByChkId(studentPhotoChkId)) ? (
-                <div
-                  style={{
-                    width: "120px",
-                    height: "120px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "#f5f5f5",
-                    borderRadius: "8px",
-                    border: "2px solid white",
-                    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                    margin: "0 auto 10px auto",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => openFileInNewTab(getValueByChkId(studentPhotoChkId))}
-                >
-                  <FileText size={50} color="#344C7D" />
-                </div>
-              ) : (
-                <div style={{ position: "relative", marginBottom: "10px" }}>
-                  <StyledAvatar src={getValueByChkId(studentPhotoChkId)} alt="Tender Image" size={120} />
-                  {isImageUrl(getValueByChkId(studentPhotoChkId)) && (
-                    <StyledIconButton onClick={() => openFileInNewTab(getValueByChkId(studentPhotoChkId))}>
-                      <Eye size={16} />
-                    </StyledIconButton>
-                  )}
-                </div>
-              )}
-              <div style={{ fontSize: "14px", fontWeight: "600", marginTop: "5px" }}>Tender</div>
-            </div>
-  
-            {/* Key Details */}
-            <div
-              style={{ flex: "1", padding: "15px", backgroundColor: "rgba(255, 255, 255, 0.7)", borderRadius: "12px" }}
-            >
-              <StyledTitle level={3} style={{ color: "#344C7D", marginBottom: "15px" }}>
-                Key Information
-              </StyledTitle>
-              <StyledGrid columns={window.innerWidth < 768 ? 1 : 2}>
-                {fields
-                  .filter((f, idx) => idx < 4 && !f.isImage && !f.isPdf)
-                  .map((field, idx) => (
-                    <StyledFieldBox
-                      key={idx}
-                      style={{ backgroundColor: "white" }}
-                      isEditing={isEditing}
-                      variant={fieldVariant}
-                    >
-                      <StyledFieldLabel>
-                        {getIconForField(field.label)}
-                        {field.label}
-                      </StyledFieldLabel>
-                      {isEditing ? (
-                        <StyledInput
-                          value={editedData[field.id] || ""}
-                          onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        />
-                      ) : (
-                        <StyledFieldValue>{field.value || "—"}</StyledFieldValue>
-                      )}
-                    </StyledFieldBox>
-                  ))}
-              </StyledGrid>
-            </div>
-          </div>
-  
-          {/* Additional Details */}
-          <div>
-            <StyledTitle level={3} style={{ marginBottom: "15px" }}>
-              Additional Details
-            </StyledTitle>
-            <StyledGrid columns={window.innerWidth < 768 ? 1 : 3}>
-              {fields
-                .filter((f, idx) => idx >= 4 && !f.isImage && !f.isPdf)
-                .map((field, idx) => (
-                  <StyledFieldBox key={idx} isEditing={isEditing} variant={fieldVariant}>
-                    <StyledFieldLabel>
-                      {getIconForField(field.label)}
-                      {field.label}
-                    </StyledFieldLabel>
-                    {isEditing ? (
-                      <StyledInput
-                        value={editedData[field.id] || ""}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      />
-                    ) : (
-                      <StyledFieldValue>{field.value || "—"}</StyledFieldValue>
-                    )}
-                  </StyledFieldBox>
-                ))}
-  
-              {/* Render image and PDF fields separately */}
-              {fields
-                .filter((f) => f.isImage || f.isPdf)
-                .map((field, idx) => (
-                  <StyledFieldBox key={`file-${idx}`} isEditing={isEditing} variant={fieldVariant}>
-                    <StyledFieldLabel>
-                      {field.isPdf ? <FileText size={16} /> : <ImageIcon size={16} />}
-                      {field.label}
-                    </StyledFieldLabel>
-                    {isEditing ? (
-                      <>
-                        <StyledInput
-                          value={editedData[field.id] || ""}
-                          onChange={(e) => handleInputChange(field.id, e.target.value)}
-                          placeholder={field.isPdf ? "Enter PDF URL" : "Enter image URL"}
-                        />
-                        <FileUploadField
-                          chkId={field.id}
-                          currentValue={editedData[field.id] || field.value}
-                          onChange={handleInputChange}
-                          isEditing={isEditing}
-                        />
-                      </>
-                    ) : field.isImage ? (
-                      <StyledButton
-                        style={{ marginTop: "5px", padding: "6px 12px", fontSize: "12px" }}
-                        onClick={() => openFileInNewTab(field.value)}
-                      >
-                        <ImageIcon size={14} style={{ marginRight: "5px" }} />
-                        View Image
-                      </StyledButton>
-                    ) : field.isPdf ? (
-                      <StyledButton
-                        style={{ marginTop: "5px", padding: "6px 12px", fontSize: "12px" }}
-                        onClick={() => openFileInNewTab(field.value)}
-                      >
-                        <FileText size={14} style={{ marginRight: "5px" }} />
-                        View PDF
-                      </StyledButton>
-                    ) : null}
-                  </StyledFieldBox>
-                ))}
-            </StyledGrid>
-          </div>
-        </div>
+        
       </StyledCard>
     );
   };
@@ -1604,7 +1403,38 @@ const calculateGST = (amount) => {
               <Download size={16} />
               Download PDF
             </StyledButton>
-            
+              {isAdmin && (
+            <div>
+              {isEditing ? (
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <StyledButton
+                    onClick={saveChanges}
+                    primary
+                    disabled={isSaving}
+                    style={{ backgroundColor: "#4caf50" }}
+                  >
+                    {isSaving ? (
+                      "Saving..."
+                    ) : (
+                      <>
+                        <Save size={16} style={{ marginRight: "5px" }} />
+                        Save
+                      </>
+                    )}
+                  </StyledButton>
+                  <StyledButton onClick={toggleEditMode}>
+                    <X size={16} style={{ marginRight: "5px" }} />
+                    Cancel
+                  </StyledButton>
+                </div>
+              ) : (
+                <StyledButton onClick={toggleEditMode} primary>
+                  <Edit size={16} style={{ marginRight: "5px" }} />
+                  Edit Details
+                </StyledButton>
+              )}
+            </div>
+          )}
             {/* <StyledButton 
               onClick={downloadFormattedPDF} 
               style={{ display: "flex", alignItems: "center", gap: "5px", border: "1px solid #344C7D", color: "#344C7D" }}
