@@ -5,13 +5,14 @@ import useSWR, { mutate as globalMutate } from "swr"
 import axios from "axios"
 import AuditDetails from "./audit-details.js"
 import "./TaskList.css"
+
 const fetcher = async (url) => {
   const res = await axios.get(url)
   return res.data
 }
 
 export default function TaskList() {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedMilestone, setSelectedMilestone] = useState("all")
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(15)
   const [error, setError] = useState("")
@@ -26,17 +27,30 @@ export default function TaskList() {
 
   const tasks = tasksResponse?.success ? (tasksResponse.data ?? []) : []
 
-  const filteredTasks = useMemo(() => {
-    const value = searchTerm.toLowerCase()
-    if (!value) return tasks
-    return tasks.filter((task) => {
-      return (
-        task.job_card_no?.toLowerCase().includes(value) ||
-        task.milestone?.toLowerCase().includes(value) ||
-        task.status_text?.toLowerCase().includes(value)
-      )
+  // Extract DISTINCT milestones from tasks
+  const distinctMilestones = useMemo(() => {
+    const milestoneSet = new Set()
+    tasks.forEach(task => {
+      if (task.milestone && task.milestone.trim() !== "") {
+        milestoneSet.add(task.milestone.trim())
+      }
     })
-  }, [tasks, searchTerm])
+    // Convert to array and sort alphabetically
+    return Array.from(milestoneSet).sort((a, b) => a.localeCompare(b))
+  }, [tasks])
+
+  const filteredTasks = useMemo(() => {
+    let filtered = tasks
+    
+    // Apply DISTINCT milestone filter
+    if (selectedMilestone !== "all") {
+      filtered = filtered.filter(task => 
+        task.milestone && task.milestone.trim() === selectedMilestone
+      )
+    }
+    
+    return filtered
+  }, [tasks, selectedMilestone])
 
   const totalPages = Math.ceil(filteredTasks.length / rowsPerPage) || 1
   const startIndex = page * rowsPerPage
@@ -47,8 +61,13 @@ export default function TaskList() {
     setExpandedTasks((prev) => ({ ...prev, [taskId]: !prev[taskId] }))
   }
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value)
+  const handleMilestoneFilter = (e) => {
+    setSelectedMilestone(e.target.value)
+    setPage(0)
+  }
+
+  const clearFilters = () => {
+    setSelectedMilestone("all")
     setPage(0)
   }
 
@@ -83,10 +102,6 @@ export default function TaskList() {
     }
   }
 
-  // Pending: Start only
-  // In Progress: Hold + Stop(Complete)
-  // Hold: Start only
-  // Complete: No actions
   const getAvailableActions = (currentStatus) => {
     const status = currentStatus?.toLowerCase()
     switch (status) {
@@ -233,16 +248,46 @@ export default function TaskList() {
   return (
     <div className="task-list-container">
       <div className="task-list-header">
-        <div className="task-list-actions">
-          <h2 className="task-list-title">Task List</h2>
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search by Job Card, Milestone, or Status..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="search-input"
-            />
+        <h2 className="task-list-title">Task List</h2>
+        
+        <div className="filters-container">
+          <div className="filter-group">
+            <label htmlFor="milestone-filter" className="filter-label">Filter by Milestone</label>
+            <select
+              id="milestone-filter"
+              value={selectedMilestone}
+              onChange={handleMilestoneFilter}
+              className="milestone-filter-select"
+            >
+              <option value="all">All Milestones ({distinctMilestones.length})</option>
+              {distinctMilestones.map((milestone, index) => (
+                <option key={`${milestone}-${index}`} value={milestone}>
+                  {milestone}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label className="filter-label invisible">Actions</label>
+            <button 
+              onClick={clearFilters}
+              className="clear-filters-button"
+              disabled={selectedMilestone === "all"}
+            >
+              Clear Filter
+            </button>
+          </div>
+          
+          <div className="filter-stats">
+            <span className="filter-count">
+              Showing {filteredTasks.length} of {tasks.length} tasks
+            </span>
+            {selectedMilestone !== "all" && (
+              <span className="milestone-filter-badge">
+                Filtered by: {selectedMilestone}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -256,18 +301,6 @@ export default function TaskList() {
         </div>
       )}
 
-      <div className="status-legend">
-        <h4>Allowed actions by status</h4>
-        <div className="status-flow">
-          <div className="status-item pending">Pending: Start</div>
-          <div className="flow-arrow">↓</div>
-          <div className="status-item in-progress">In Progress: Hold, Complete</div>
-          <div className="flow-arrow">↕</div>
-          <div className="status-item complete">Complete: No actions</div>
-          <div className="flow-note">On Hold: Start only (resumes to In Progress)</div>
-        </div>
-      </div>
-
       <div className="table-container">
         <table className="task-table">
           <thead>
@@ -278,7 +311,6 @@ export default function TaskList() {
               <th>Created Date</th>
               <th>Updated Date</th>
               <th>Task Action</th>
-              <th>Audit History</th>
             </tr>
           </thead>
 
@@ -349,21 +381,11 @@ export default function TaskList() {
                           <span className="no-actions">No actions available</span>
                         )}
                       </td>
-
-                      <td className="audit-cell" data-label="Audit History">
-                        <button
-                          className="audit-toggle-button"
-                          onClick={() => toggleAuditHistory(task.id)}
-                          disabled={isActionBusy}
-                        >
-                          {isExpanded ? "▲ Hide" : "▼ Show"} History
-                        </button>
-                      </td>
                     </tr>
 
                     {isExpanded && (
                       <tr className="audit-history-row">
-                        <td colSpan={7} className="audit-history-cell">
+                        <td colSpan={6} className="audit-history-cell">
                           <div className="audit-history-container">
                             <h4 className="audit-history-title">Audit History for Job Card: {task.job_card_no}</h4>
                             <AuditDetails taskId={task.id} jobCardNo={task.job_card_no || ""} />
@@ -376,8 +398,20 @@ export default function TaskList() {
               })
             ) : (
               <tr>
-                <td colSpan={7} className="no-tasks">
-                  No tasks found
+                <td colSpan={6} className="no-tasks">
+                  {selectedMilestone !== "all" ? (
+                    <div className="no-results-message">
+                      No tasks found for milestone: {selectedMilestone}
+                      <button 
+                        onClick={clearFilters}
+                        className="clear-filters-inline"
+                      >
+                        Clear filter
+                      </button>
+                    </div>
+                  ) : (
+                    "No tasks found"
+                  )}
                 </td>
               </tr>
             )}
