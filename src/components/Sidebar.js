@@ -47,11 +47,12 @@ function Sidebar() {
     { path: "/dashboard", name: "Dashboard", icon: <SummarizeIcon /> },
     { path: "/employees", name: "Employees", icon: <Person /> },
     { path: "/attendance", name: "Attendance", icon: <DynamicFormIcon /> },
+    { path: "/ot-report", name: "OT Report", icon: <AccountTreeIcon /> },
     { path: "/job-card-list", name: "Job Cards", icon: <BadgeIcon /> },
     { path: "/visit", name: "Visit", icon: <MapIcon /> },
     { path: "/tasks", name: "Tasks", icon: <EngineeringIcon /> },
     { path: "/clients", name: "Clients", icon: <SupportAgentIcon /> },
-  ]
+  ];
 
   const userModules = user?.modules || []
   const allowedRoutes = userModules.map((moduleId) => moduleMapping[moduleId]).filter(Boolean)

@@ -4,10 +4,9 @@ import React from "react"
 import Navbar from "../components/Navbar"
 import Sidebar from "../components/Sidebar"
 import { Box, useMediaQuery, useTheme, Container } from "@mui/material"
-import ParticipantList from '../components/participant/ParticipantList';
-import AddNewParticipant from '../components/participant/AddNewParticipant';
+import OTReportList from "../components/activity/OTReportList"
 
-function Participant() {
+function OTReport() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const isTablet = useMediaQuery(theme.breakpoints.down("md"))
@@ -17,12 +16,10 @@ function Participant() {
   
   // Determine which component to render based on the URL
   const renderContent = () => {
-    if (currentPath.includes("/participant") ) {
-      return <ParticipantList />
-    } else if (currentPath.includes("/new-participant")) {
-      return <AddNewParticipant />
+    if (currentPath.includes("/ot-report") ) {
+      return <OTReportList />
     } 
-    return <ParticipantList /> // Default fallback
+    return <OTReportList />; // Default fallback
   }
  
   // Calculate sidebar width based on state and screen size
@@ -82,4 +79,4 @@ function Participant() {
   )
 }
 
-export default Participant
+export default OTReport;
