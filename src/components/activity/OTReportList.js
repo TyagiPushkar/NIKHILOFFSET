@@ -16,23 +16,56 @@ import {
   Box,
   Button,
   Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Grid,
   Chip,
-  IconButton,
   Autocomplete,
 } from "@mui/material";
-// import { Search, Filter, Download, Refresh, FilterAlt } from "lucide-react";
 import { Search, Filter, Download } from "lucide-react";
+
 const ATTENDANCE_API_URL =
   "https://namami-infotech.com/NIKHILOFFSET/src/attendance/get_employee_attendance.php";
 const EMPLOYEE_API_URL =
   "https://namami-infotech.com/NIKHILOFFSET/src/employee/list_employee.php";
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 const DEFAULT_ROWS_PER_PAGE = 25;
+
+// Helper function to add two time strings (HH:MM:SS)
+const addTimes = (time1, time2) => {
+  const parseTime = (timeStr) => {
+    if (!timeStr || timeStr === "00:00:00")
+      return { hours: 0, minutes: 0, seconds: 0 };
+    const [hours, minutes, seconds] = timeStr.split(":").map(Number);
+    return { hours, minutes, seconds };
+  };
+
+  const t1 = parseTime(time1);
+  const t2 = parseTime(time2);
+
+  let seconds = t1.seconds + t2.seconds;
+  let minutes = t1.minutes + t2.minutes;
+  let hours = t1.hours + t2.hours;
+
+  if (seconds >= 60) {
+    minutes += Math.floor(seconds / 60);
+    seconds %= 60;
+  }
+
+  if (minutes >= 60) {
+    hours += Math.floor(minutes / 60);
+    minutes %= 60;
+  }
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+};
+
+// Helper function to format time for display
+const formatTimeDisplay = (timeStr) => {
+  if (!timeStr || timeStr === "00:00:00") return "00:00";
+  const [hours, minutes] = timeStr.split(":");
+  return `${hours}:${minutes}`;
+};
 
 const OTReportList = () => {
   // State management
@@ -175,20 +208,32 @@ const OTReportList = () => {
     const summary = {
       totalRecords: state.attendanceRecords.length,
       totalOTHours: 0,
+      totalWorkingHours: 0,
+      totalCombinedHours: 0,
       employeesWithOT: new Set(),
       maxOT: "00:00:00",
       totalOTFormatted: "00:00:00",
+      totalWorkingFormatted: "00:00:00",
+      totalCombinedFormatted: "00:00:00",
     };
 
     let maxOTHours = 0;
 
     state.attendanceRecords.forEach((record) => {
+      // Parse working hours
+      if (record.working_hours && record.working_hours !== "00:00:00") {
+        const [wHours, wMinutes, wSeconds] = record.working_hours
+          .split(":")
+          .map(Number);
+        summary.totalWorkingHours += wHours * 3600 + wMinutes * 60 + wSeconds;
+      }
+
+      // Parse OT hours
       if (record.ot && record.ot !== "00:00:00") {
         summary.employeesWithOT.add(record.emp_id);
 
-        // Parse OT hours (HH:MM:SS)
-        const [hours, minutes, seconds] = record.ot.split(":").map(Number);
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        const [oHours, oMinutes, oSeconds] = record.ot.split(":").map(Number);
+        const totalSeconds = oHours * 3600 + oMinutes * 60 + oSeconds;
         summary.totalOTHours += totalSeconds;
 
         // Track max OT
@@ -200,14 +245,26 @@ const OTReportList = () => {
     });
 
     // Convert total seconds back to HH:MM:SS
-    const totalHours = Math.floor(summary.totalOTHours / 3600);
-    const totalMinutes = Math.floor((summary.totalOTHours % 3600) / 60);
-    const totalSeconds = Math.floor(summary.totalOTHours % 60);
-    summary.totalOTFormatted = `${totalHours
-      .toString()
-      .padStart(2, "0")}:${totalMinutes
-      .toString()
-      .padStart(2, "0")}:${totalSeconds.toString().padStart(2, "0")}`;
+    const formatSecondsToTime = (totalSeconds) => {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    };
+
+    summary.totalWorkingFormatted = formatSecondsToTime(
+      summary.totalWorkingHours
+    );
+    summary.totalOTFormatted = formatSecondsToTime(summary.totalOTHours);
+
+    // Calculate combined total
+    summary.totalCombinedHours =
+      summary.totalWorkingHours + summary.totalOTHours;
+    summary.totalCombinedFormatted = formatSecondsToTime(
+      summary.totalCombinedHours
+    );
 
     summary.employeesWithOTCount = summary.employeesWithOT.size;
 
@@ -288,6 +345,14 @@ const OTReportList = () => {
     }
   };
 
+    const formatDate1 = (datetime) => {
+      if (!datetime) return "-";
+      const dateObj = new Date(datetime);
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
   const exportToCSV = () => {
     const headers = [
       "Employee ID",
@@ -297,11 +362,13 @@ const OTReportList = () => {
       "Out Time",
       "Working Hours",
       "OT Hours",
+      "Total Hours",
     ];
     const csvContent = [
       headers.join(","),
-      ...state.attendanceRecords.map((record) =>
-        [
+      ...state.attendanceRecords.map((record) => {
+        const totalHours = addTimes(record.working_hours, record.ot);
+        return [
           record.emp_id,
           `"${record.employee_name}"`,
           record.in_date,
@@ -309,8 +376,9 @@ const OTReportList = () => {
           record.out_time,
           record.working_hours,
           record.ot,
-        ].join(",")
-      ),
+          totalHours,
+        ].join(",");
+      }),
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -376,9 +444,6 @@ const OTReportList = () => {
           OT Report List
         </Typography>
         <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-          {/* <IconButton onClick={fetchAttendanceData} title="Refresh data">
-            <Refresh />
-          </IconButton> */}
           <Button
             variant="outlined"
             onClick={exportToCSV}
@@ -409,7 +474,6 @@ const OTReportList = () => {
             flexWrap: "wrap",
           }}
         >
-          {/* <FilterAlt size={18} /> */}
           <Typography variant="body2" color="textSecondary">
             Active Filters:
           </Typography>
@@ -428,6 +492,9 @@ const OTReportList = () => {
           </Button>
         </Box>
       )}
+
+      {/* Summary Cards */}
+     
 
       {/* Filters Section */}
       <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -522,30 +589,6 @@ const OTReportList = () => {
             </Box>
           </Grid>
         </Grid>
-
-        {/* Search within filtered results */}
-        {/* <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label="Search in results"
-              variant="outlined"
-              size="small"
-              value={state.searchTerm}
-              onChange={handleSearch}
-              InputProps={{
-                startAdornment: (
-                  <Search
-                    size={18}
-                    color="#666"
-                    style={{ marginRight: "8px" }}
-                  />
-                ),
-              }}
-              placeholder="Search by name, ID, or date"
-            />
-          </Grid>
-        </Grid> */}
       </Paper>
 
       {state.error && (
@@ -591,12 +634,15 @@ const OTReportList = () => {
               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                 OT Hours
               </TableCell>
+              {/* <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                Total Hours
+              </TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
             {searchedRecords.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
                   <Typography color="textSecondary">
                     {state.attendanceRecords.length === 0
                       ? "No attendance records found for the selected filters"
@@ -610,55 +656,69 @@ const OTReportList = () => {
                   state.page * state.rowsPerPage,
                   state.page * state.rowsPerPage + state.rowsPerPage
                 )
-                .map((record) => (
-                  <TableRow
-                    key={`${record.id}-${record.in_date}`}
-                    hover
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "rgba(246, 147, 32, 0.04)",
-                      },
-                      backgroundColor:
-                        record.ot !== "00:00:00"
+                .map((record) => {
+                  const totalHours = addTimes(record.working_hours, record.ot);
+                  const hasOT = record.ot !== "00:00:00";
+
+                  return (
+                    <TableRow
+                      key={`${record.id}-${record.in_date}`}
+                      hover
+                      sx={{
+                        "&:hover": {
+                          backgroundColor: "rgba(246, 147, 32, 0.04)",
+                        },
+                        backgroundColor: hasOT
                           ? "rgba(255, 245, 235, 0.5)"
                           : "inherit",
-                    }}
-                  >
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="500">
-                        {record.emp_id}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{record.employee_name}</TableCell>
-                    <TableCell>{record.in_date}</TableCell>
-                    <TableCell>{record.in_time}</TableCell>
-                    <TableCell>{record.out_date}</TableCell>
-                    <TableCell>{record.out_time}</TableCell>
-                    <TableCell>{record.working_hours}</TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        fontWeight="bold"
-                        sx={{
-                          color:
-                            record.ot !== "00:00:00"
-                              ? "#d32f2f"
-                              : "text.secondary",
-                          bgcolor:
-                            record.ot !== "00:00:00"
-                              ? "#ffebee"
-                              : "transparent",
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          display: "inline-block",
-                        }}
-                      >
-                        {record.ot}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      }}
+                    >
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="500">
+                          {record.emp_id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{record.employee_name}</TableCell>
+                      <TableCell>{formatDate1(record.in_date)}</TableCell>
+                      <TableCell>{record.in_time}</TableCell>
+                      <TableCell>{formatDate1(record.out_date)}</TableCell>
+                      <TableCell>{record.out_time}</TableCell>
+                      <TableCell>{formatTimeDisplay(totalHours)}</TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: hasOT ? "#d32f2f" : "text.secondary",
+                            bgcolor: hasOT ? "#ffebee" : "transparent",
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            display: "inline-block",
+                            fontWeight: hasOT ? "bold" : "normal",
+                          }}
+                        >
+                          {formatTimeDisplay(record.ot)}
+                        </Typography>
+                      </TableCell>
+                      {/* <TableCell>
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold"
+                          sx={{
+                            color: "#1976d2",
+                            bgcolor: "#e3f2fd",
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            display: "inline-block",
+                          }}
+                        >
+                          {formatTimeDisplay(totalHours)}
+                        </Typography>
+                      </TableCell> */}
+                    </TableRow>
+                  );
+                })
             )}
           </TableBody>
         </Table>
