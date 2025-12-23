@@ -31,6 +31,7 @@ import VisitReport from "./pages/VisitReport";
 import Task from "./pages/Task";
 import DisableZoom from "./pages/DisableZoom";
 import Clients from "./pages/Clients";
+import Payment from './pages/Payment';
 function App() {
   useEffect(() => {
     const handleRightClick = (event) => {
@@ -185,6 +186,10 @@ function App() {
             <Route
               path="/invoices"
               element={<PrivateRoute element={Invoices} />}
+            />
+            <Route
+              path="/payment"
+              element={<PrivateRoute element={Payment} />}
             />
             <Route
               path="/add-invoice"

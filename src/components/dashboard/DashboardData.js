@@ -112,13 +112,13 @@ function DashboardData() {
           </div>
         </div>
 
-        <div className="summary-card total-tasks">
+        {/* <div className="summary-card total-tasks">
           <div className="card-icon">✅</div>
           <div className="card-content">
             <h3 className="card-value">{total_tasks}</h3>
             <p className="card-label">Total Tasks</p>
           </div>
-        </div>
+        </div> */}
 
         <div className="summary-card completed-tasks">
           <div className="card-icon">🏆</div>
@@ -131,7 +131,7 @@ function DashboardData() {
         <div className="summary-card in-progress-tasks">
           <div className="card-icon">⚡</div>
           <div className="card-content">
-            <h3 className="card-value">{status_summary?.["In Progress"] || 0}</h3>
+            <h3 className="card-value">{status_summary?.["Pending"] || 0}</h3>
             <p className="card-label">In Progress</p>
           </div>
         </div>
@@ -172,10 +172,7 @@ function DashboardData() {
                     <span className="status-dot pending"></span>
                     <span>Pending: {data.Pending || 0}</span>
                   </div>
-                  <div className="status-item">
-                    <span className="status-dot in-progress"></span>
-                    <span>In Progress: {data["In Progress"] || 0}</span>
-                  </div>
+                 
                   <div className="status-item">
                     <span className="status-dot hold"></span>
                     <span>Hold: {data.Hold || 0}</span>

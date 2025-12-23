@@ -97,7 +97,14 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
   }
 
   const drawer = (
-    <Box sx={{ width: 280, height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        width: 280,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -132,9 +139,15 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             borderRadius: "10px",
             mb: 1,
             color: location.pathname === "/dashboard" ? "#344C7D" : "#666",
-            backgroundColor: location.pathname === "/dashboard" ? "rgba(246, 147, 32, 0.08)" : "transparent",
+            backgroundColor:
+              location.pathname === "/dashboard"
+                ? "rgba(246, 147, 32, 0.08)"
+                : "transparent",
             "&:hover": {
-              backgroundColor: location.pathname === "/dashboard" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+              backgroundColor:
+                location.pathname === "/dashboard"
+                  ? "rgba(246, 147, 32, 0.12)"
+                  : "rgba(0, 0, 0, 0.04)",
             },
             transition: "all 0.2s ease",
           }}
@@ -153,7 +166,7 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             }}
           />
         </ListItem>
-<ListItem
+        <ListItem
           button
           component={Link}
           to="/job-card-list"
@@ -162,9 +175,15 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             borderRadius: "10px",
             mb: 1,
             color: location.pathname === "/job-card-list" ? "#344C7D" : "#666",
-            backgroundColor: location.pathname === "/job-card-list" ? "rgba(246, 147, 32, 0.08)" : "transparent",
+            backgroundColor:
+              location.pathname === "/job-card-list"
+                ? "rgba(246, 147, 32, 0.08)"
+                : "transparent",
             "&:hover": {
-              backgroundColor: location.pathname === "/job-card-list" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+              backgroundColor:
+                location.pathname === "/job-card-list"
+                  ? "rgba(246, 147, 32, 0.12)"
+                  : "rgba(0, 0, 0, 0.04)",
             },
             transition: "all 0.2s ease",
           }}
@@ -183,7 +202,7 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             }}
           />
         </ListItem>
-         
+
         <ListItem
           button
           component={Link}
@@ -193,9 +212,15 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             borderRadius: "10px",
             mb: 1,
             color: location.pathname === "/tasks" ? "#344C7D" : "#666",
-            backgroundColor: location.pathname === "/tasks" ? "rgba(246, 147, 32, 0.08)" : "transparent",
+            backgroundColor:
+              location.pathname === "/tasks"
+                ? "rgba(246, 147, 32, 0.08)"
+                : "transparent",
             "&:hover": {
-              backgroundColor: location.pathname === "/tasks" ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+              backgroundColor:
+                location.pathname === "/tasks"
+                  ? "rgba(246, 147, 32, 0.12)"
+                  : "rgba(0, 0, 0, 0.04)",
             },
             transition: "all 0.2s ease",
           }}
@@ -211,6 +236,42 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
             primary="Tasks"
             primaryTypographyProps={{
               fontWeight: location.pathname === "/tasks" ? 600 : 500,
+            }}
+          />
+        </ListItem>
+        <ListItem
+          button
+          component={Link}
+          to="/payment"
+          selected={location.pathname === "/payment"}
+          sx={{
+            borderRadius: "10px",
+            mb: 1,
+            color: location.pathname === "/payment" ? "#344C7D" : "#666",
+            backgroundColor:
+              location.pathname === "/payment"
+                ? "rgba(246, 147, 32, 0.08)"
+                : "transparent",
+            "&:hover": {
+              backgroundColor:
+                location.pathname === "/payment"
+                  ? "rgba(246, 147, 32, 0.12)"
+                  : "rgba(0, 0, 0, 0.04)",
+            },
+            transition: "all 0.2s ease",
+          }}
+        >
+          <Dashboard
+            sx={{
+              mr: 2,
+              color: "inherit",
+              fontSize: "1.2rem",
+            }}
+          />
+          <ListItemText
+            primary="Payment"
+            primaryTypographyProps={{
+              fontWeight: location.pathname === "/payment" ? 600 : 500,
             }}
           />
         </ListItem>
@@ -236,10 +297,14 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
               fontSize: "1rem",
             }}
           >
-            {!user.image && (user.username ? user.username.charAt(0).toUpperCase() : "U")}
+            {!user.image &&
+              (user.username ? user.username.charAt(0).toUpperCase() : "U")}
           </Avatar>
           <Box sx={{ ml: 1.5 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#333" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 600, color: "#333" }}
+            >
               {user.username || "User"}
             </Typography>
             <Typography variant="caption" sx={{ color: "#666" }}>
@@ -249,7 +314,7 @@ function Navbar({ onMenuToggle, sidebarOpen }) {
         </Box>
       )}
     </Box>
-  )
+  );
 
   return (
     <>

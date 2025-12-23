@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import "./TenderList.css";
 
-function TenderList() {
+function PaymentList() {
   const [tempRecords, setTempRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [taskStatus, setTaskStatus] = useState({}); // Store task status by activityId
@@ -14,6 +14,8 @@ function TenderList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const empId = user.emp_id || "";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,7 +49,36 @@ function TenderList() {
     };
     fetchData();
   }, []);
+const handleMarkPayment = async (activityId) => {
+  try {
+    const response = await axios.post(
+      "https://namami-infotech.com/NIKHILOFFSET/src/menu/update_payment_received.php",
+      { ActivityId: activityId, PaymentReceived: 1 }
+    );
 
+    if (response.data.success) {
+      alert("Payment status updated successfully!");
+
+      // Update local state to reflect payment
+      setTempRecords((prev) =>
+        prev.map((rec) =>
+          rec.ActivityId === activityId ? { ...rec, PaymentReceived: 1 } : rec
+        )
+      );
+
+      setFilteredRecords((prev) =>
+        prev.map((rec) =>
+          rec.ActivityId === activityId ? { ...rec, PaymentReceived: 1 } : rec
+        )
+      );
+    } else {
+      alert("Failed to update payment: " + response.data.message);
+    }
+  } catch (err) {
+    console.error("Payment update error:", err);
+    alert("Error updating payment.");
+  }
+};
 
 // Process task data to get the latest status for each activityId
 const processTaskData = (taskData) => {
@@ -140,13 +171,8 @@ return (
   <div className="tender-list-container">
     <div className="tender-list-header">
       <div className="tender-list-actions">
-        <h2 className="tender-list-title">Job Card List</h2>
-        <button
-          className="action-button new-tender-button"
-          onClick={() => navigate("/create-job-card")}
-        >
-          New Job Card
-        </button>
+        <h2 className="tender-list-title">Payment Status List</h2>
+       
       </div>
     </div>
 
@@ -158,6 +184,7 @@ return (
           <tr>
             <th>Job Name</th>
             <th>Status</th>
+            <th>Payment Status</th>
           </tr>
         </thead>
         <tbody>
@@ -184,7 +211,26 @@ return (
                       {statusInfo.text}
                     </span>
                   </td>
-                
+                  <td>
+                    {record.PaymentReceived === 0 &&
+                    empId === "NI003" &&
+                    taskStatus[record.ActivityId]?.status ===
+                      "Completed - Post Press" ? (
+                      <button
+                        className="mark-payment-button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click navigation
+                          handleMarkPayment(record.ActivityId);
+                        }}
+                      >
+                        Mark Payment Complete
+                      </button>
+                    ) : record.PaymentReceived === 1 ? (
+                      <span className="payment-received">Payment Received</span>
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </td>
                 </tr>
               );
             })
@@ -222,4 +268,4 @@ return (
 );
 }
 
-export default TenderList;
+export default PaymentList;

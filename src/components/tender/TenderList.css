@@ -276,3 +276,47 @@
 .tender-table th:nth-child(4) {
   width: 150px;
 }
+.mark-payment-button {
+  margin-left: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mark-payment-button:hover {
+  background-color: #45a049;
+}
+
+.payment-received {
+  margin-left: 0px;
+  color: green;
+  font-weight: bold;
+}
+.mark-payment-button {
+  margin-left: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mark-payment-button:hover {
+  background-color: #45a049;
+}
+
+.payment-received {
+  color: green;
+  font-weight: bold;
+}
+
+.payment-pending {
+  color: red;
+  font-weight: bold;
+}

@@ -30,53 +30,54 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import AssessmentIcon from '@mui/icons-material/Assessment';
 function Sidebar() {
-  const location = useLocation()
-  const { user } = useAuth()
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"))
-  const [expanded, setExpanded] = useState(!isTablet)
+  const location = useLocation();
+  const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const [expanded, setExpanded] = useState(!isTablet);
 
   // Module Mapping
   const moduleMapping = {
     // Keeping the commented mappings for reference
-  }
+  };
 
   // Default routes visible to everyone
   const defaultRoutes = [
     { path: "/dashboard", name: "Dashboard", icon: <SummarizeIcon /> },
-    { path: "/employees", name: "Employees", icon: <Person /> },
     { path: "/attendance", name: "Attendance", icon: <DynamicFormIcon /> },
-    { path: "/ot-report", name: "OT Report", icon: <AccountTreeIcon /> },
     { path: "/job-card-list", name: "Job Cards", icon: <BadgeIcon /> },
     { path: "/visit", name: "Visit", icon: <MapIcon /> },
     { path: "/tasks", name: "Tasks", icon: <EngineeringIcon /> },
     { path: "/clients", name: "Clients", icon: <SupportAgentIcon /> },
+    { path: "/employees", name: "Employees", icon: <Person /> },
+    { path: "/ot-report", name: "OT Report", icon: <AccountTreeIcon /> },
+    { path: "/payment", name: "Payment", icon: <ReceiptIcon /> },
   ];
 
-  const userModules = user?.modules || []
-  const allowedRoutes = userModules.map((moduleId) => moduleMapping[moduleId]).filter(Boolean)
+  const userModules = user?.modules || [];
+  const allowedRoutes = userModules
+    .map((moduleId) => moduleMapping[moduleId])
+    .filter(Boolean);
 
   // HR-specific routes
   if (user?.role === "HR") {
-    allowedRoutes.push(
+    allowedRoutes
+      .push
       // Keeping the commented routes for reference
-    )
+      ();
   }
 
   // If module 5 (Visit) exists, also add Maps
-  if (userModules.includes(5)) {
-    allowedRoutes.push({ path: "/maps", name: "Maps", icon: <MapIcon /> })
-  }
 
   // Combine all available routes
-  const routes = [...defaultRoutes, ...allowedRoutes]
+  const routes = [...defaultRoutes, ...allowedRoutes];
 
   // Group routes by category (for demonstration - you can customize this)
-  const mainRoutes = routes.slice(0, 2)
-  const secondaryRoutes = routes.slice(2)
+  const mainRoutes = routes.slice(0, 2);
+  const secondaryRoutes = routes.slice(2);
 
-  const drawerWidth = expanded ? 240 : 80
+  const drawerWidth = expanded ? 240 : 80;
 
   return (
     <Box
@@ -134,10 +135,7 @@ function Sidebar() {
                   transition: "all 0.3s ease",
                 }}
               />
-              
             </Box>
-
-            
           </Box>
 
           <Box
@@ -161,7 +159,11 @@ function Sidebar() {
                     mb: 0.5,
                   }}
                 >
-                  <Tooltip title={expanded ? "" : route.name} placement="right" arrow>
+                  <Tooltip
+                    title={expanded ? "" : route.name}
+                    placement="right"
+                    arrow
+                  >
                     <Box
                       component={Link}
                       to={route.path}
@@ -172,11 +174,17 @@ function Sidebar() {
                         px: 2,
                         py: 1.5,
                         borderRadius: "10px",
-                        color: location.pathname === route.path ? "#344C7D" : "#666",
-                        backgroundColor: location.pathname === route.path ? "rgba(246, 147, 32, 0.08)" : "transparent",
+                        color:
+                          location.pathname === route.path ? "#344C7D" : "#666",
+                        backgroundColor:
+                          location.pathname === route.path
+                            ? "rgba(246, 147, 32, 0.08)"
+                            : "transparent",
                         "&:hover": {
                           backgroundColor:
-                            location.pathname === route.path ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+                            location.pathname === route.path
+                              ? "rgba(246, 147, 32, 0.12)"
+                              : "rgba(0, 0, 0, 0.04)",
                         },
                         transition: "all 0.2s ease",
                       }}
@@ -194,7 +202,10 @@ function Sidebar() {
                           style: {
                             fontSize: "1.4rem",
                             transition: "transform 0.2s ease",
-                            transform: location.pathname === route.path ? "scale(1.1)" : "scale(1)",
+                            transform:
+                              location.pathname === route.path
+                                ? "scale(1.1)"
+                                : "scale(1)",
                           },
                         })}
                       </ListItemIcon>
@@ -203,7 +214,8 @@ function Sidebar() {
                         <Typography
                           sx={{
                             ml: 1,
-                            fontWeight: location.pathname === route.path ? 600 : 500,
+                            fontWeight:
+                              location.pathname === route.path ? 600 : 500,
                             fontSize: "0.95rem",
                             opacity: expanded ? 1 : 0,
                             transition: "opacity 0.3s ease",
@@ -221,8 +233,6 @@ function Sidebar() {
 
             {secondaryRoutes.length > 0 && (
               <>
-               
-
                 {/* Secondary Navigation */}
                 <List sx={{ width: "100%", px: 1.5 }}>
                   {secondaryRoutes.map((route, index) => (
@@ -234,7 +244,11 @@ function Sidebar() {
                         mb: 0.5,
                       }}
                     >
-                      <Tooltip title={expanded ? "" : route.name} placement="right" arrow>
+                      <Tooltip
+                        title={expanded ? "" : route.name}
+                        placement="right"
+                        arrow
+                      >
                         <Box
                           component={Link}
                           to={route.path}
@@ -245,12 +259,19 @@ function Sidebar() {
                             px: 2,
                             py: 1.5,
                             borderRadius: "10px",
-                            color: location.pathname === route.path ? "#344C7D" : "#666",
+                            color:
+                              location.pathname === route.path
+                                ? "#344C7D"
+                                : "#666",
                             backgroundColor:
-                              location.pathname === route.path ? "rgba(246, 147, 32, 0.08)" : "transparent",
+                              location.pathname === route.path
+                                ? "rgba(246, 147, 32, 0.08)"
+                                : "transparent",
                             "&:hover": {
                               backgroundColor:
-                                location.pathname === route.path ? "rgba(246, 147, 32, 0.12)" : "rgba(0, 0, 0, 0.04)",
+                                location.pathname === route.path
+                                  ? "rgba(246, 147, 32, 0.12)"
+                                  : "rgba(0, 0, 0, 0.04)",
                             },
                             transition: "all 0.2s ease",
                           }}
@@ -261,14 +282,19 @@ function Sidebar() {
                               color: "inherit",
                               fontSize: "1.2rem",
                               display: "flex",
-                              justifyContent: expanded ? "flex-start" : "center",
+                              justifyContent: expanded
+                                ? "flex-start"
+                                : "center",
                             }}
                           >
                             {React.cloneElement(route.icon, {
                               style: {
                                 fontSize: "1.4rem",
                                 transition: "transform 0.2s ease",
-                                transform: location.pathname === route.path ? "scale(1.1)" : "scale(1)",
+                                transform:
+                                  location.pathname === route.path
+                                    ? "scale(1.1)"
+                                    : "scale(1)",
                               },
                             })}
                           </ListItemIcon>
@@ -277,7 +303,8 @@ function Sidebar() {
                             <Typography
                               sx={{
                                 ml: 1,
-                                fontWeight: location.pathname === route.path ? 600 : 500,
+                                fontWeight:
+                                  location.pathname === route.path ? 600 : 500,
                                 fontSize: "0.95rem",
                                 opacity: expanded ? 1 : 0,
                                 transition: "opacity 0.3s ease",
@@ -362,7 +389,7 @@ function Sidebar() {
         </Drawer>
       </Box>
     </Box>
-  )
+  );
 }
 
 export default Sidebar
