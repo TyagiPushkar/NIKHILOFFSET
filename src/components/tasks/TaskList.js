@@ -249,17 +249,21 @@ export default function TaskList() {
     <div className="task-list-container">
       <div className="task-list-header">
         <h2 className="task-list-title">Task List</h2>
-        
+
         <div className="filters-container">
           <div className="filter-group">
-            <label htmlFor="milestone-filter" className="filter-label">Filter by Milestone</label>
+            <label htmlFor="milestone-filter" className="filter-label">
+              Filter by Milestone
+            </label>
             <select
               id="milestone-filter"
               value={selectedMilestone}
               onChange={handleMilestoneFilter}
               className="milestone-filter-select"
             >
-              <option value="all">All Milestones ({distinctMilestones.length})</option>
+              <option value="all">
+                All Milestones ({distinctMilestones.length})
+              </option>
               {distinctMilestones.map((milestone, index) => (
                 <option key={`${milestone}-${index}`} value={milestone}>
                   {milestone}
@@ -267,10 +271,10 @@ export default function TaskList() {
               ))}
             </select>
           </div>
-          
+
           <div className="filter-group">
             <label className="filter-label invisible">Actions</label>
-            <button 
+            <button
               onClick={clearFilters}
               className="clear-filters-button"
               disabled={selectedMilestone === "all"}
@@ -278,7 +282,7 @@ export default function TaskList() {
               Clear Filter
             </button>
           </div>
-          
+
           <div className="filter-stats">
             <span className="filter-count">
               Showing {filteredTasks.length} of {tasks.length} tasks
@@ -305,7 +309,8 @@ export default function TaskList() {
         <table className="task-table">
           <thead>
             <tr>
-              <th>Job Card No</th>
+              <th>Job Card Name</th>
+              <th>Client Name</th>
               <th>Milestone</th>
               <th>Status</th>
               <th>Created Date</th>
@@ -317,22 +322,30 @@ export default function TaskList() {
           <tbody>
             {currentTasks.length > 0 ? (
               currentTasks.map((task) => {
-                const availableActions = getAvailableActions(task.status_text)
-                const isActionBusy = !!actionLoading[task.id]
-                const isExpanded = !!expandedTasks[task.id]
-                const isComplete = task.status_text?.toLowerCase() === "complete"
+                const availableActions = getAvailableActions(task.status_text);
+                const isActionBusy = !!actionLoading[task.id];
+                const isExpanded = !!expandedTasks[task.id];
+                const isComplete =
+                  task.status_text?.toLowerCase() === "complete";
 
                 return (
                   <React.Fragment key={task.id}>
                     <tr className="task-row">
-                      <td className="job-card-cell" data-label="Job Card">
-                        {task.job_card_no || "-"}
+                      <td className="job-card-cell" data-label="Job Card Name">
+                        {task.chk5_value || "-"}
+                      </td>
+                      <td className="job-card-cell" data-label="Client Name">
+                        {task.chk3_value || "-"}
                       </td>
                       <td className="milestone-cell" data-label="Milestone">
                         {task.milestone || "-"}
                       </td>
                       <td className="status-cell" data-label="Status">
-                        <span className={`status-badge ${getStatusClass(task.status_text)}`}>
+                        <span
+                          className={`status-badge ${getStatusClass(
+                            task.status_text
+                          )}`}
+                        >
                           {task.status_text || task.status || "Unknown"}
                         </span>
                       </td>
@@ -349,20 +362,40 @@ export default function TaskList() {
                             <select
                               value=""
                               onChange={(e) => {
-                                if (!e.target.value) return
-                                const action = e.target.value
-                                e.target.value = ""
+                                if (!e.target.value) return;
+                                const action = e.target.value;
+                                e.target.value = "";
 
                                 if (action === "Stop") {
-                                  if (window.confirm("Are you sure you want to mark this task as Complete?")) {
-                                    handleActionChange(task.id, action, task.status_text)
+                                  if (
+                                    window.confirm(
+                                      "Are you sure you want to mark this task as Complete?"
+                                    )
+                                  ) {
+                                    handleActionChange(
+                                      task.id,
+                                      action,
+                                      task.status_text
+                                    );
                                   }
                                 } else if (action === "Hold") {
-                                  if (window.confirm("Are you sure you want to put this task on Hold?")) {
-                                    handleActionChange(task.id, action, task.status_text)
+                                  if (
+                                    window.confirm(
+                                      "Are you sure you want to put this task on Hold?"
+                                    )
+                                  ) {
+                                    handleActionChange(
+                                      task.id,
+                                      action,
+                                      task.status_text
+                                    );
                                   }
                                 } else {
-                                  handleActionChange(task.id, action, task.status_text)
+                                  handleActionChange(
+                                    task.id,
+                                    action,
+                                    task.status_text
+                                  );
                                 }
                               }}
                               disabled={isActionBusy}
@@ -371,14 +404,21 @@ export default function TaskList() {
                               <option value="">Select Action</option>
                               {availableActions.map((action) => (
                                 <option key={action} value={action}>
-                                  {getActionDisplayText(action, task.status_text)}
+                                  {getActionDisplayText(
+                                    action,
+                                    task.status_text
+                                  )}
                                 </option>
                               ))}
                             </select>
-                            {isActionBusy && <div className="action-loading">Updating...</div>}
+                            {isActionBusy && (
+                              <div className="action-loading">Updating...</div>
+                            )}
                           </div>
                         ) : (
-                          <span className="no-actions">No actions available</span>
+                          <span className="no-actions">
+                            No actions available
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -387,14 +427,19 @@ export default function TaskList() {
                       <tr className="audit-history-row">
                         <td colSpan={6} className="audit-history-cell">
                           <div className="audit-history-container">
-                            <h4 className="audit-history-title">Audit History for Job Card: {task.job_card_no}</h4>
-                            <AuditDetails taskId={task.id} jobCardNo={task.job_card_no || ""} />
+                            <h4 className="audit-history-title">
+                              Audit History for Job Card: {task.job_card_no}
+                            </h4>
+                            <AuditDetails
+                              taskId={task.id}
+                              jobCardNo={task.job_card_no || ""}
+                            />
                           </div>
                         </td>
                       </tr>
                     )}
                   </React.Fragment>
-                )
+                );
               })
             ) : (
               <tr>
@@ -402,7 +447,7 @@ export default function TaskList() {
                   {selectedMilestone !== "all" ? (
                     <div className="no-results-message">
                       No tasks found for milestone: {selectedMilestone}
-                      <button 
+                      <button
                         onClick={clearFilters}
                         className="clear-filters-inline"
                       >
@@ -420,7 +465,11 @@ export default function TaskList() {
       </div>
 
       <div className="pagination">
-        <button className="pagination-button" disabled={page === 0} onClick={() => handleChangePage(page - 1)}>
+        <button
+          className="pagination-button"
+          disabled={page === 0}
+          onClick={() => handleChangePage(page - 1)}
+        >
           Previous
         </button>
         <span className="page-info">
@@ -446,5 +495,5 @@ export default function TaskList() {
         </select>
       </div>
     </div>
-  )
+  );
 }
