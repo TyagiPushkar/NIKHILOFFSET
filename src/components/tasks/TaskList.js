@@ -46,6 +46,9 @@ export default function TaskList() {
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
 
+    // Filter out completed tasks
+    filtered = filtered.filter((task) => task.status !== "Complete");
+
     // Apply DISTINCT milestone filter
     if (selectedMilestone !== "all") {
       filtered = filtered.filter(
@@ -359,7 +362,13 @@ export default function TaskList() {
 
           <div className="filter-stats">
             <span className="filter-count">
-              Showing {filteredTasks.length} of {tasks.length} tasks
+              Showing {filteredTasks.length} of{" "}
+              {
+                tasks.filter((t) => t.status?.toLowerCase() !== "complete")
+                  .length
+              }{" "}
+              active tasks
+             
             </span>
             {(selectedMilestone !== "all" || searchQuery) && (
               <span className="filter-badge">
@@ -402,8 +411,7 @@ export default function TaskList() {
                 const availableActions = getAvailableActions(task.status);
                 const isActionBusy = !!actionLoading[task.id];
                 const isExpanded = !!expandedTasks[task.id];
-                const isComplete =
-                  task.status?.toLowerCase() === "complete";
+                const isComplete = task.status?.toLowerCase() === "complete";
 
                 return (
                   <React.Fragment key={task.id}>
@@ -415,7 +423,6 @@ export default function TaskList() {
                       <td className="job-card-cell" data-label="Job Card Name">
                         <div className="job-card-info">
                           {task.chk5_value || "-"}
-                          
                         </div>
                       </td>
                       <td className="job-card-cell" data-label="Client Name">
@@ -452,8 +459,7 @@ export default function TaskList() {
 
                                 if (action === "Complete") {
                                   const message =
-                                    task.status?.toLowerCase() ===
-                                    "pending"
+                                    task.status?.toLowerCase() === "pending"
                                       ? "Are you sure you want to mark this pending task as Complete without starting work?"
                                       : "Are you sure you want to mark this task as Complete?";
 
@@ -466,8 +472,7 @@ export default function TaskList() {
                                   }
                                 } else if (action === "Hold") {
                                   const message =
-                                    task.status?.toLowerCase() ===
-                                    "pending"
+                                    task.status?.toLowerCase() === "pending"
                                       ? "Are you sure you want to put this pending task on Hold without starting work?"
                                       : "Are you sure you want to put this task on Hold?";
 
@@ -492,10 +497,7 @@ export default function TaskList() {
                               <option value="">Select Action</option>
                               {availableActions.map((action) => (
                                 <option key={action} value={action}>
-                                  {getActionDisplayText(
-                                    action,
-                                    task.status
-                                  )}
+                                  {getActionDisplayText(action, task.status)}
                                 </option>
                               ))}
                             </select>
