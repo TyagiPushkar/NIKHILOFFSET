@@ -415,13 +415,7 @@ export default function TaskList() {
                       <td className="job-card-cell" data-label="Job Card Name">
                         <div className="job-card-info">
                           {task.chk5_value || "-"}
-                          <button
-                            className="audit-history-toggle"
-                            onClick={() => toggleAuditHistory(task.id)}
-                            title="View Audit History"
-                          >
-                            {isExpanded ? "▲" : "▼"}
-                          </button>
+                          
                         </div>
                       </td>
                       <td className="job-card-cell" data-label="Client Name">
