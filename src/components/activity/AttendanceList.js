@@ -653,51 +653,54 @@ const fetchTodayAttendance = async (date = new Date()) => {
 }
 
   const fetchAttendance = async () => {
-    if (!selectedEmpId) return
+    if (!selectedEmpId) return;
 
-    setError(null)
-    setLoading(true)
+    setError(null);
+    setLoading(true);
 
     try {
-      console.log("Fetching attendance for EmpId:", selectedEmpId)
-      
+      console.log("Fetching attendance for EmpId:", selectedEmpId);
+
       const response = await axios.get(
         `https://namami-infotech.com/NIKHILOFFSET/src/attendance/view_attendance.php`,
-        { 
+        {
           params: { EmpId: selectedEmpId },
-          timeout: 10000
+          timeout: 10000,
         }
-      )
+      );
 
-      console.log("Attendance API Response:", response.data)
+      console.log("Attendance API Response:", response.data);
 
       if (response.data.success && response.data.data) {
         const attendanceData = response.data.data
           .map((activity) => {
             if (!activity.date) {
-              console.warn("Activity missing date:", activity)
-              return null
+              console.warn("Activity missing date:", activity);
+              return null;
             }
 
-            let formattedDate
+            let formattedDate;
             try {
-              formattedDate = parse(activity.date, "dd/MM/yyyy", new Date())
+              formattedDate = parse(activity.date, "dd/MM/yyyy", new Date());
               if (isNaN(formattedDate)) {
-                formattedDate = parseISO(activity.date)
+                formattedDate = parseISO(activity.date);
                 if (isNaN(formattedDate)) {
-                  console.error("Invalid date format:", activity.date)
-                  return null
+                  console.error("Invalid date format:", activity.date);
+                  return null;
                 }
               }
             } catch (error) {
-              console.error("Date parsing error:", error, activity.date)
-              return null
+              console.error("Date parsing error:", error, activity.date);
+              return null;
             }
 
-            const employeeShift = selectedEmployee?.Shift || user.shift || "9:00 AM - 6:00 PM"
+            const employeeShift =
+              selectedEmployee?.Shift || user.shift || "9:00 AM - 6:00 PM";
 
             return {
-              title: `In: ${activity.firstIn || "N/A"}\nOut: ${activity.lastOut || "N/A"}`,
+              title: `In: ${activity.firstIn || "N/A"}\nOut: ${
+                activity.lastOut || "N/A"
+              }`,
               start: formattedDate,
               end: formattedDate,
               firstIn: activity.firstIn || "N/A",
@@ -710,192 +713,206 @@ const fetchTodayAttendance = async (date = new Date()) => {
               firstEvent: activity.firstEvent || "Unknown",
               lastEvent: activity.lastEvent || "Unknown",
               type: "attendance",
-            }
+              inImage: activity.inImage || null,
+              outImage: activity.outImage || null,
+            };
           })
-          .filter(Boolean)
+          .filter(Boolean);
 
-        console.log("Processed attendance data:", attendanceData)
-        setAllActivities(attendanceData)
+        console.log("Processed attendance data:", attendanceData);
+        setAllActivities(attendanceData);
       } else {
-        console.log("No attendance data found or API returned error:", response.data)
-        setAllActivities([])
+        console.log(
+          "No attendance data found or API returned error:",
+          response.data
+        );
+        setAllActivities([]);
         if (!response.data.success) {
-          setError(response.data.message || "No attendance data found for the selected employee")
+          setError(
+            response.data.message ||
+              "No attendance data found for the selected employee"
+          );
         }
       }
     } catch (error) {
-      console.error("Error fetching attendance:", error)
-      setError("Error fetching attendance: " + (error.response?.data?.message || error.message))
-      setAllActivities([])
+      console.error("Error fetching attendance:", error);
+      setError(
+        "Error fetching attendance: " +
+          (error.response?.data?.message || error.message)
+      );
+      setAllActivities([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchHolidays = async () => {
     try {
-      console.log("Fetching holidays for Tenent_Id:", user.tenent_id)
-      
+      console.log("Fetching holidays for Tenent_Id:", user.tenent_id);
+
       const response = await axios.get(
         `https://namami-infotech.com/NIKHILOFFSET/src/holiday/view_holiday.php?Tenent_Id=${user.tenent_id}`,
         { timeout: 10000 }
-      )
-      
-      console.log("Holidays API Response:", response.data)
-      
+      );
+
+      console.log("Holidays API Response:", response.data);
+
       if (response.data.success && response.data.data) {
-        setHolidays(response.data.data)
+        setHolidays(response.data.data);
       } else {
-        setHolidays([])
+        setHolidays([]);
       }
     } catch (error) {
-      console.error("Error fetching holidays:", error)
-      setHolidays([])
+      console.error("Error fetching holidays:", error);
+      setHolidays([]);
     }
-  }
+  };
 
   const fetchLeaves = async (empId) => {
-    if (!empId) return
+    if (!empId) return;
 
     try {
-      console.log("Fetching leaves for empId:", empId)
-      
+      console.log("Fetching leaves for empId:", empId);
+
       const response = await axios.get(
         `https://namami-infotech.com/NIKHILOFFSET/src/leave/get_leave.php?empId=${empId}`,
         { timeout: 10000 }
-      )
-      
-      console.log("Leaves API Response:", response.data)
-      
+      );
+
+      console.log("Leaves API Response:", response.data);
+
       if (response.data.success && response.data.data) {
-        setLeaves(response.data.data)
+        setLeaves(response.data.data);
       } else {
-        setLeaves([])
+        setLeaves([]);
       }
     } catch (error) {
-      console.error("Error fetching leaves:", error)
-      setLeaves([])
+      console.error("Error fetching leaves:", error);
+      setLeaves([]);
     }
-  }
+  };
 
   useEffect(() => {
-  if (user.role === "Admin") {
-    const fetchEmployees = async () => {
-      try {
-        setLoading(true)
-        console.log("Fetching employees for Tenent_Id:", user.tenent_id)
-        
-        const response = await axios.get(
-          `https://namami-infotech.com/NIKHILOFFSET/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
-          { timeout: 10000 }
-        )
-        
-        console.log("Employees API Response:", response.data)
-        
-        if (response.data.success && response.data.data) {
-          setEmployees(response.data.data)
-        } else {
-          setEmployees([])
-          setError("Error fetching employee list: " + (response.data.message || "Unknown error"))
-        }
-      } catch (error) {
-        console.error("Error fetching employees:", error)
-        setError("Error fetching employee list: " + error.message)
-        setEmployees([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchEmployees()
-  } else {
-    const currentUserEmployee = {
-      EmpId: user.emp_id,
-      Name: user.name,
-      WeekOff: user.weekOff || "Saturday,Sunday",
-      Shift: user.shift || "9:00 AM - 6:00 PM"
-    }
-    setSelectedEmployee(currentUserEmployee)
-    setEmployees([currentUserEmployee])
-  }
+    if (user.role === "Admin") {
+      const fetchEmployees = async () => {
+        try {
+          setLoading(true);
+          console.log("Fetching employees for Tenent_Id:", user.tenent_id);
 
-  fetchHolidays()
-  fetchTodayAttendance(selectedDate) // Pass selected date instead of today
-}, [user.role, user.tenent_id])
+          const response = await axios.get(
+            `https://namami-infotech.com/NIKHILOFFSET/src/employee/list_employee.php?Tenent_Id=${user.tenent_id}`,
+            { timeout: 10000 }
+          );
+
+          console.log("Employees API Response:", response.data);
+
+          if (response.data.success && response.data.data) {
+            setEmployees(response.data.data);
+          } else {
+            setEmployees([]);
+            setError(
+              "Error fetching employee list: " +
+                (response.data.message || "Unknown error")
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching employees:", error);
+          setError("Error fetching employee list: " + error.message);
+          setEmployees([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchEmployees();
+    } else {
+      const currentUserEmployee = {
+        EmpId: user.emp_id,
+        Name: user.name,
+        WeekOff: user.weekOff || "Saturday,Sunday",
+        Shift: user.shift || "9:00 AM - 6:00 PM",
+      };
+      setSelectedEmployee(currentUserEmployee);
+      setEmployees([currentUserEmployee]);
+    }
+
+    fetchHolidays();
+    fetchTodayAttendance(selectedDate); // Pass selected date instead of today
+  }, [user.role, user.tenent_id]);
 
   useEffect(() => {
     if (selectedEmpId) {
-      console.log("Selected EmpId changed to:", selectedEmpId)
-      fetchAttendance()
-      fetchLeaves(selectedEmpId)
+      console.log("Selected EmpId changed to:", selectedEmpId);
+      fetchAttendance();
+      fetchLeaves(selectedEmpId);
     }
-  }, [selectedEmpId])
+  }, [selectedEmpId]);
 
   const parseTime = (timeString) => {
-    if (!timeString || timeString === "N/A") return null
+    if (!timeString || timeString === "N/A") return null;
 
-    const [time, modifier] = timeString.split(" ")
-    if (!time || !modifier) return null
+    const [time, modifier] = timeString.split(" ");
+    if (!time || !modifier) return null;
 
-    let [hours, minutes] = time.split(":")
-    if (!hours || !minutes) return null
+    let [hours, minutes] = time.split(":");
+    if (!hours || !minutes) return null;
 
-    hours = String(hours)
+    hours = String(hours);
 
     if (hours === "12") {
-      hours = "00"
+      hours = "00";
     }
     if (modifier === "PM" && hours !== "12") {
-      hours = String(Number.parseInt(hours, 10) + 12)
+      hours = String(Number.parseInt(hours, 10) + 12);
     } else if (modifier === "AM" && hours === "12") {
-      hours = "00"
+      hours = "00";
     }
 
-    return `${hours.padStart(2, "0")}:${minutes}`
-  }
+    return `${hours.padStart(2, "0")}:${minutes}`;
+  };
 
   const compareTimes = (attendanceTime, shiftTime) => {
     if (!attendanceTime || attendanceTime === "N/A" || !shiftTime) {
-      return "red"
+      return "red";
     }
 
     try {
-      const shiftStartTime = parseTime(shiftTime.split(" - ")[0])
-      const attendanceTime24 = parseTime(attendanceTime)
+      const shiftStartTime = parseTime(shiftTime.split(" - ")[0]);
+      const attendanceTime24 = parseTime(attendanceTime);
 
       if (!shiftStartTime || !attendanceTime24) {
-        return "red"
+        return "red";
       }
 
-      const shiftStart = new Date(`1970-01-01T${shiftStartTime}:00`)
-      const attendance = new Date(`1970-01-01T${attendanceTime24}:00`)
+      const shiftStart = new Date(`1970-01-01T${shiftStartTime}:00`);
+      const attendance = new Date(`1970-01-01T${attendanceTime24}:00`);
 
-      const diffInMinutes = (attendance - shiftStart) / (1000 * 60)
+      const diffInMinutes = (attendance - shiftStart) / (1000 * 60);
 
       if (diffInMinutes <= 5) {
-        return "green"
+        return "green";
       } else {
-        return "green"
+        return "green";
       }
     } catch (error) {
-      console.error("Error comparing times:", error)
-      return "green"
+      console.error("Error comparing times:", error);
+      return "green";
     }
-  }
+  };
 
   const exportToCsv = () => {
     const csvRows = [
       [
-        "Date", 
-        "Type", 
-        "Check In", 
-        "Check In Event", 
-        "Check Out", 
-        "Check Out Event", 
-        "Working Hours", 
-        "Status", 
-        "Notes"
-      ]
-    ]
+        "Date",
+        "Type",
+        "Check In",
+        "Check In Event",
+        "Check Out",
+        "Check Out Event",
+        "Working Hours",
+        "Status",
+        "Notes",
+      ],
+    ];
 
     filteredActivities.forEach((activity) => {
       if (activity.type === "attendance") {
@@ -908,8 +925,10 @@ const fetchTodayAttendance = async (date = new Date()) => {
           activity.lastEvent || "N/A",
           activity.workingHours,
           activity.color === "green" ? "On Time" : "Late",
+          activity.inImage,
+          activity.outImage || "N/A",
           "",
-        ])
+        ]);
       } else {
         csvRows.push([
           activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A",
@@ -921,114 +940,141 @@ const fetchTodayAttendance = async (date = new Date()) => {
           "-",
           activity.type.charAt(0).toUpperCase() + activity.type.slice(1),
           activity.title,
-        ])
+        ]);
       }
-    })
+    });
 
-    const csvContent = csvRows.map((row) => row.join(",")).join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.href = url
-    link.setAttribute("download", `attendance_${selectedEmpId}_${months[selectedMonth].label}_${selectedYear}.csv`)
-    link.click()
-    URL.revokeObjectURL(url)
-  }
+    const csvContent = csvRows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `attendance_${selectedEmpId}_${months[selectedMonth].label}_${selectedYear}.csv`
+    );
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const exportTodayToCsv = () => {
-  const csvRows = [
-    [
-      "Employee ID", 
-      "Employee Name", 
-      "Date", 
-      "Check In", 
-      "Check In Location", 
-      "Check Out", 
-      "Check Out Location", 
-      "Working Hours", 
-      "Status"
-    ]
-  ]
+    const csvRows = [
+      [
+        "Employee ID",
+        "Employee Name",
+        "Date",
+        "Check In",
+        "Check In Location",
+        "Check Out",
+        "Check Out Location",
+        "Working Hours",
+        "Status",
+      ],
+    ];
 
-  todayAttendance.forEach((attendance) => {
-    const employee = employees.find(emp => emp.EmpId === attendance.EmpId) || {}
-    const status = attendance.FirstIn === "N/A" || !attendance.FirstIn ? "Absent" : "Present"
-    
-    csvRows.push([
-      attendance.EmpId,
-      employee.Name || "N/A",
-      attendance.Date,
-      attendance.FirstIn,
-      attendance.FirstInLocation,
-      attendance.LastOut,
-      attendance.LastOutLocation,
-      attendance.WorkingHours,
-      status,
-    ])
-  })
+    todayAttendance.forEach((attendance) => {
+      const employee =
+        employees.find((emp) => emp.EmpId === attendance.EmpId) || {};
+      const status =
+        attendance.FirstIn === "N/A" || !attendance.FirstIn
+          ? "Absent"
+          : "Present";
 
-  const csvContent = csvRows.map((row) => row.join(",")).join("\n")
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-  const link = document.createElement("a")
-  const url = URL.createObjectURL(blob)
-  link.href = url
-  link.setAttribute("download", `attendance_${format(selectedDate, "dd_MM_yyyy")}.csv`)
-  link.click()
-  URL.revokeObjectURL(url)
-}
+      csvRows.push([
+        attendance.EmpId,
+        employee.Name || "N/A",
+        attendance.Date,
+        attendance.FirstIn,
+        attendance.FirstInLocation,
+        attendance.LastOut,
+        attendance.LastOutLocation,
+        attendance.WorkingHours,
+        status,
+      ]);
+    });
+
+    const csvContent = csvRows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `attendance_${format(selectedDate, "dd_MM_yyyy")}.csv`
+    );
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const refreshData = () => {
-  console.log("Refreshing data...")
-  if (selectedEmpId) {
-    fetchAttendance()
-    fetchLeaves(selectedEmpId)
-  }
-  fetchHolidays()
-  fetchTodayAttendance(selectedDate) // Pass selected date
-}
+    console.log("Refreshing data...");
+    if (selectedEmpId) {
+      fetchAttendance();
+      fetchLeaves(selectedEmpId);
+    }
+    fetchHolidays();
+    fetchTodayAttendance(selectedDate); // Pass selected date
+  };
 
   const regularise = () => {
-    navigate("/regularise")
-  }
+    navigate("/regularise");
+  };
 
   // Calculate statistics for filtered data (only attendance records)
-  const attendanceRecords = filteredActivities.filter((a) => a.type === "attendance")
-  const totalDays = attendanceRecords.length
-  const onTimeDays = attendanceRecords.filter((a) => a.color === "green").length
-  const lateDays = attendanceRecords.filter((a) => a.color === "grren").length
+  const attendanceRecords = filteredActivities.filter(
+    (a) => a.type === "attendance"
+  );
+  const totalDays = attendanceRecords.length;
+  const onTimeDays = attendanceRecords.filter(
+    (a) => a.color === "green"
+  ).length;
+  const lateDays = attendanceRecords.filter((a) => a.color === "grren").length;
   const avgHours =
     attendanceRecords.length > 0
       ? attendanceRecords.reduce((acc, activity) => {
-          const hours = Number.parseFloat(activity.workingHours.replace(/[^\d.]/g, "")) || 0
-          return acc + hours
+          const hours =
+            Number.parseFloat(activity.workingHours.replace(/[^\d.]/g, "")) ||
+            0;
+          return acc + hours;
         }, 0) / attendanceRecords.length
-      : 0
+      : 0;
 
   // Count other types
-  const holidayCount = filteredActivities.filter((a) => a.type === "holiday").length
-  const weekOffCount = filteredActivities.filter((a) => a.type === "weekoff").length
-  const leaveCount = filteredActivities.filter((a) => a.type === "leave").length
+  const holidayCount = filteredActivities.filter(
+    (a) => a.type === "holiday"
+  ).length;
+  const weekOffCount = filteredActivities.filter(
+    (a) => a.type === "weekoff"
+  ).length;
+  const leaveCount = filteredActivities.filter(
+    (a) => a.type === "leave"
+  ).length;
 
   // Today's attendance statistics
-  const presentCount = todayAttendance.filter(att => att.FirstIn !== "N/A" && att.FirstIn).length
-  const absentCount = todayAttendance.length - presentCount
+  const presentCount = todayAttendance.filter(
+    (att) => att.FirstIn !== "N/A" && att.FirstIn
+  ).length;
+  const absentCount = todayAttendance.length - presentCount;
 
   const eventStyleGetter = (event) => {
-    let backgroundColor = "#3174ad"
+    let backgroundColor = "#3174ad";
 
     switch (event.type) {
       case "attendance":
-        backgroundColor = event.color === "green" ? theme.palette.success.main : theme.palette.error.main
-        break
+        backgroundColor =
+          event.color === "green"
+            ? theme.palette.success.main
+            : theme.palette.error.main;
+        break;
       case "holiday":
-        backgroundColor = theme.palette.warning.main
-        break
+        backgroundColor = theme.palette.warning.main;
+        break;
       case "weekoff":
-        backgroundColor = theme.palette.secondary.main
-        break
+        backgroundColor = theme.palette.secondary.main;
+        break;
       case "leave":
-        backgroundColor = theme.palette.info.main
-        break
+        backgroundColor = theme.palette.info.main;
+        break;
     }
 
     return {
@@ -1040,13 +1086,13 @@ const fetchTodayAttendance = async (date = new Date()) => {
         border: "none",
         padding: "4px",
       },
-    }
-  }
+    };
+  };
 
   // Tab change handler
   const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue)
-  }
+    setActiveTab(newValue);
+  };
 
   return (
     <Box
@@ -1060,7 +1106,9 @@ const fetchTodayAttendance = async (date = new Date()) => {
       }}
     >
       <Box sx={{ width: "100%", maxWidth: 1800 }}>
-        <Paper sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}>
+        <Paper
+          sx={{ p: { xs: 1.5, md: 2 }, mb: 3, borderRadius: 2, boxShadow: 2 }}
+        >
           <Box
             display="flex"
             flexDirection={{ xs: "column", md: "row" }}
@@ -1068,7 +1116,11 @@ const fetchTodayAttendance = async (date = new Date()) => {
             alignItems={{ xs: "stretch", md: "center" }}
             gap={1.5}
           >
-            <Typography variant="h5" fontWeight="bold" sx={{ color: "#8d0638ff" }}>
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+              sx={{ color: "#8d0638ff" }}
+            >
               Attendance Management
             </Typography>
 
@@ -1077,8 +1129,13 @@ const fetchTodayAttendance = async (date = new Date()) => {
                 <Grid item xs={12} sm={6} md={3}>
                   <Autocomplete
                     options={employees}
-                    getOptionLabel={(option) => `${option.Name} (${option.EmpId})`}
-                    value={employees.find((emp) => emp.EmpId === selectedEmpId) || null}
+                    getOptionLabel={(option) =>
+                      `${option.Name} (${option.EmpId})`
+                    }
+                    value={
+                      employees.find((emp) => emp.EmpId === selectedEmpId) ||
+                      null
+                    }
                     onChange={(e, newValue) => {
                       setSelectedEmpId(newValue ? newValue.EmpId : "");
                       setSelectedEmployee(newValue);
@@ -1091,7 +1148,9 @@ const fetchTodayAttendance = async (date = new Date()) => {
                         size="small"
                         InputProps={{
                           ...params.InputProps,
-                          startAdornment: <Person sx={{ mr: 1, color: "text.secondary" }} />,
+                          startAdornment: (
+                            <Person sx={{ mr: 1, color: "text.secondary" }} />
+                          ),
                         }}
                       />
                     )}
@@ -1103,7 +1162,11 @@ const fetchTodayAttendance = async (date = new Date()) => {
               <Grid item xs={6} sm={3} md={2}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Month</InputLabel>
-                  <Select value={selectedMonth} label="Month" onChange={(e) => setSelectedMonth(e.target.value)}>
+                  <Select
+                    value={selectedMonth}
+                    label="Month"
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                  >
                     {months.map((month) => (
                       <MenuItem key={month.value} value={month.value}>
                         {month.label}
@@ -1116,7 +1179,11 @@ const fetchTodayAttendance = async (date = new Date()) => {
               <Grid item xs={6} sm={3} md={2}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Year</InputLabel>
-                  <Select value={selectedYear} label="Year" onChange={(e) => setSelectedYear(e.target.value)}>
+                  <Select
+                    value={selectedYear}
+                    label="Year"
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                  >
                     {years.map((year) => (
                       <MenuItem key={year} value={year}>
                         {year}
@@ -1146,23 +1213,43 @@ const fetchTodayAttendance = async (date = new Date()) => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={3}>
-                <Stack direction="row" spacing={0.5} justifyContent={{ xs: "flex-start", md: "flex-end" }}>
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  justifyContent={{ xs: "flex-start", md: "flex-end" }}
+                >
                   {user.role === "Admin" && (
-                    <Button variant="outlined" onClick={regularise} size="small">
+                    <Button
+                      variant="outlined"
+                      onClick={regularise}
+                      size="small"
+                    >
                       <Settings fontSize="small" />
                     </Button>
                   )}
-                  <Button 
-                    variant="contained" 
-                    onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv} 
-                    disabled={activeTab === 0 ? filteredActivities.length === 0 : todayAttendance.length === 0} 
+                  <Button
+                    variant="contained"
+                    onClick={activeTab === 0 ? exportToCsv : exportTodayToCsv}
+                    disabled={
+                      activeTab === 0
+                        ? filteredActivities.length === 0
+                        : todayAttendance.length === 0
+                    }
                     size="small"
                   >
                     <Download fontSize="small" />
                   </Button>
                   <Tooltip title="Refresh Data">
-                    <IconButton onClick={refreshData} disabled={loading || todayLoading} size="small">
-                      {loading || todayLoading ? <CircularProgress size={18} /> : <Refresh fontSize="small" />}
+                    <IconButton
+                      onClick={refreshData}
+                      disabled={loading || todayLoading}
+                      size="small"
+                    >
+                      {loading || todayLoading ? (
+                        <CircularProgress size={18} />
+                      ) : (
+                        <Refresh fontSize="small" />
+                      )}
                     </IconButton>
                   </Tooltip>
                 </Stack>
@@ -1183,7 +1270,9 @@ const fetchTodayAttendance = async (date = new Date()) => {
           <Alert severity="info" sx={{ mb: 3 }}>
             <Box display="flex" alignItems="center" gap={2}>
               <CircularProgress size={20} />
-              {activeTab === 0 ? "Loading attendance data..." : "Loading today's attendance..."}
+              {activeTab === 0
+                ? "Loading attendance data..."
+                : "Loading today's attendance..."}
             </Box>
           </Alert>
         )}
@@ -1191,28 +1280,28 @@ const fetchTodayAttendance = async (date = new Date()) => {
         {/* Tabs for switching between views */}
         <Paper sx={{ mb: 2, borderRadius: 2, boxShadow: 1 }}>
           <Tabs
-  value={activeTab}
-  onChange={handleTabChange}
-  variant="fullWidth"
-  sx={{
-    borderBottom: 1,
-    borderColor: 'divider',
-    '& .MuiTab-root': {
-      minHeight: 48,
-    }
-  }}
->
-  <Tab 
-    icon={<CalendarToday />} 
-    label="Attendance History" 
-    iconPosition="start"
-  />
-  <Tab 
-    icon={<Today />} 
-    label="Daily Attendance"  // Changed from "Today's Attendance"
-    iconPosition="start"
-  />
-</Tabs>
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              "& .MuiTab-root": {
+                minHeight: 48,
+              },
+            }}
+          >
+            <Tab
+              icon={<CalendarToday />}
+              label="Attendance History"
+              iconPosition="start"
+            />
+            <Tab
+              icon={<Today />}
+              label="Daily Attendance" // Changed from "Today's Attendance"
+              iconPosition="start"
+            />
+          </Tabs>
         </Paper>
 
         {activeTab === 0 ? (
@@ -1222,26 +1311,37 @@ const fetchTodayAttendance = async (date = new Date()) => {
               <Grid item xs={6} sm={3}>
                 <Card
                   sx={{
-                    background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                    background:
+                      "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
                     p: 0.5,
                     borderRadius: 1.5,
                     boxShadow: 0.5,
                   }}
                 >
                   <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           Working Days
                         </Typography>
-                        <Typography variant="subtitle2" fontWeight="bold" lineHeight={1}>
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight="bold"
+                          lineHeight={1}
+                        >
                           {totalDays}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           Records
                         </Typography>
                       </Box>
-                      <CalendarToday sx={{ fontSize: 18, color: "#8d0638ff" }} />
+                      <CalendarToday
+                        sx={{ fontSize: 18, color: "#8d0638ff" }}
+                      />
                     </Box>
                   </CardContent>
                 </Card>
@@ -1250,14 +1350,19 @@ const fetchTodayAttendance = async (date = new Date()) => {
               <Grid item xs={6} sm={3}>
                 <Card
                   sx={{
-                    background: "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
+                    background:
+                      "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
                     p: 0.5,
                     borderRadius: 1.5,
                     boxShadow: 0.5,
                   }}
                 >
                   <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           On Time
@@ -1276,7 +1381,9 @@ const fetchTodayAttendance = async (date = new Date()) => {
                             : "0%"}
                         </Typography>
                       </Box>
-                      <AccessTime sx={{ fontSize: 18, color: "success.main" }} />
+                      <AccessTime
+                        sx={{ fontSize: 18, color: "success.main" }}
+                      />
                     </Box>
                   </CardContent>
                 </Card>
@@ -1285,14 +1392,19 @@ const fetchTodayAttendance = async (date = new Date()) => {
               <Grid item xs={6} sm={3}>
                 <Card
                   sx={{
-                    background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
+                    background:
+                      "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
                     p: 0.5,
                     borderRadius: 1.5,
                     boxShadow: 0.5,
                   }}
                 >
                   <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           Late Arrivals
@@ -1320,14 +1432,19 @@ const fetchTodayAttendance = async (date = new Date()) => {
               <Grid item xs={6} sm={3}>
                 <Card
                   sx={{
-                    background: "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
+                    background:
+                      "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
                     p: 0.5,
                     borderRadius: 1.5,
                     boxShadow: 0.5,
                   }}
                 >
                   <CardContent sx={{ p: 0.5, "&:last-child": { pb: 0.5 } }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           Non-Working
@@ -1356,9 +1473,12 @@ const fetchTodayAttendance = async (date = new Date()) => {
 
             {/* Main Content for History View */}
             {viewMode === "calendar" ? (
-              <Paper sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, boxShadow: 1 }}>
+              <Paper
+                sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, boxShadow: 1 }}
+              >
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
-                  Attendance Calendar - {months[selectedMonth].label} {selectedYear}
+                  Attendance Calendar - {months[selectedMonth].label}{" "}
+                  {selectedYear}
                 </Typography>
 
                 <Calendar
@@ -1390,15 +1510,25 @@ const fetchTodayAttendance = async (date = new Date()) => {
             ) : (
               <Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
                 <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ fontWeight: 500 }}
+                  >
                     All Records - {months[selectedMonth].label} {selectedYear}
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
 
                   {filteredActivities.length === 0 ? (
                     <Box sx={{ textAlign: "center", py: 6 }}>
-                      <CalendarToday sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                      <CalendarToday
+                        sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
+                      />
+                      <Typography
+                        variant="subtitle1"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         No records found
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -1410,36 +1540,57 @@ const fetchTodayAttendance = async (date = new Date()) => {
                   ) : isMobile ? (
                     <Stack spacing={1}>
                       {filteredActivities
-                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                        .slice(
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage
+                        )
                         .map((activity, index) => (
-                          <AttendanceCard key={index} activity={activity} isMobile={isMobile} />
+                          <AttendanceCard
+                            key={index}
+                            activity={activity}
+                            isMobile={isMobile}
+                          />
                         ))}
                     </Stack>
                   ) : (
                     <TableContainer sx={{ borderRadius: 2 }}>
                       <Table>
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                            {["Date", "Type", "Check In", "Check Out", "Working Hours", "Status"].map(
-                              (head) => (
-                                <TableCell
-                                  key={head}
-                                  sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
-                                >
-                                  {head}
-                                </TableCell>
-                              )
-                            )}
+                          <TableRow
+                            sx={{ backgroundColor: theme.palette.primary.main }}
+                          >
+                            {[
+                              "Date",
+                              "Type",
+                              "Check In",
+                              "In Image",
+                              "Check Out",
+                              "Out Image",
+                              "Working Hours",
+                              "Status",
+                            ].map((head) => (
+                              <TableCell
+                                key={head}
+                                sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
+                              >
+                                {head}
+                              </TableCell>
+                            ))}
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {filteredActivities
-                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            .slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            )
                             .map((activity, index) => (
                               <TableRow
                                 key={index}
                                 sx={{
-                                  "&:hover": { backgroundColor: theme.palette.action.hover },
+                                  "&:hover": {
+                                    backgroundColor: theme.palette.action.hover,
+                                  },
                                   borderLeft: `4px solid ${
                                     activity.type === "attendance"
                                       ? activity.color === "green"
@@ -1455,19 +1606,43 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                 }}
                               >
                                 <TableCell sx={{ py: 1 }}>
-                                  <Box display="flex" alignItems="center" gap={1}>
-                                    <CalendarToday fontSize="small" sx={{ color: "#8d0638ff" }} />
-                                    {activity.start ? format(activity.start, "dd/MM/yyyy") : "N/A"}
+                                  <Box
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={1}
+                                  >
+                                    <CalendarToday
+                                      fontSize="small"
+                                      sx={{ color: "#8d0638ff" }}
+                                    />
+                                    {activity.start
+                                      ? format(activity.start, "dd/MM/yyyy")
+                                      : "N/A"}
                                   </Box>
                                 </TableCell>
 
                                 <TableCell sx={{ py: 1 }}>
-                                  <Box display="flex" alignItems="center" gap={1}>
-                                    {activity.type === "attendance" && <Person fontSize="small" />}
-                                    {activity.type === "holiday" && <Event fontSize="small" />}
-                                    {activity.type === "weekoff" && <Weekend fontSize="small" />}
-                                    {activity.type === "leave" && <BeachAccess fontSize="small" />}
-                                    <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
+                                  <Box
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={1}
+                                  >
+                                    {activity.type === "attendance" && (
+                                      <Person fontSize="small" />
+                                    )}
+                                    {activity.type === "holiday" && (
+                                      <Event fontSize="small" />
+                                    )}
+                                    {activity.type === "weekoff" && (
+                                      <Weekend fontSize="small" />
+                                    )}
+                                    {activity.type === "leave" && (
+                                      <BeachAccess fontSize="small" />
+                                    )}
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ textTransform: "capitalize" }}
+                                    >
                                       {activity.type}
                                     </Typography>
                                   </Box>
@@ -1475,10 +1650,16 @@ const fetchTodayAttendance = async (date = new Date()) => {
 
                                 <TableCell sx={{ py: 1 }}>
                                   {activity.type === "attendance" ? (
-                                    <Tooltip title={`Location: ${activity.firstInLocation || "N/A"}`}>
+                                    <Tooltip
+                                      title={`Location: ${
+                                        activity.firstInLocation || "N/A"
+                                      }`}
+                                    >
                                       <Box
                                         component="a"
-                                        href={generateMapUrl(activity.firstInLocation)}
+                                        href={generateMapUrl(
+                                          activity.firstInLocation
+                                        )}
                                         target="_blank"
                                         sx={{
                                           textDecoration: "none",
@@ -1486,27 +1667,63 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                           display: "flex",
                                           alignItems: "center",
                                           gap: 1,
-                                          "&:hover": { textDecoration: "underline" },
+                                          "&:hover": {
+                                            textDecoration: "underline",
+                                          },
                                         }}
                                       >
                                         <LocationOn fontSize="small" />
-                                        {activity.firstIn} ({activity.firstEvent})
+                                        {activity.firstIn} (
+                                        {activity.firstEvent})
                                       </Box>
                                     </Tooltip>
                                   ) : (
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
                                       -
                                     </Typography>
+                                  )}
+                                </TableCell>
+                                {/* In Image */}
+                                <TableCell sx={{ py: 1 }}>
+                                  {activity.type === "attendance" && (
+                                    <Box
+                                      component="a"
+                                      href={activity.inImage}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      sx={{ display: "inline-block" }}
+                                    >
+                                      <Box
+                                        component="img"
+                                        src={activity.inImage}
+                                        alt="In"
+                                        sx={{
+                                          width: 45,
+                                          height: 45,
+                                          objectFit: "cover",
+                                          borderRadius: 1,
+                                          border: "1px solid #ddd",
+                                          cursor: "pointer",
+                                        }}
+                                      />
+                                    </Box>
                                   )}
                                 </TableCell>
 
                                 <TableCell sx={{ py: 1 }}>
                                   {activity.type === "attendance" ? (
                                     activity.lastOutLocation !== "N/A" ? (
-                                      <Tooltip title={`Location: ${activity.lastOutLocation}`}>
+                                      <Tooltip
+                                        title={`Location: ${activity.lastOutLocation}`}
+                                      >
                                         <Box
                                           component="a"
-                                          href={generateMapUrl(activity.lastOutLocation)}
+                                          href={generateMapUrl(
+                                            activity.lastOutLocation
+                                          )}
                                           target="_blank"
                                           sx={{
                                             textDecoration: "none",
@@ -1514,21 +1731,68 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                             display: "flex",
                                             alignItems: "center",
                                             gap: 1,
-                                            "&:hover": { textDecoration: "underline" },
+                                            "&:hover": {
+                                              textDecoration: "underline",
+                                            },
                                           }}
                                         >
                                           <LocationOn fontSize="small" />
-                                          {activity.lastOut} ({activity.lastEvent})
+                                          {activity.lastOut} (
+                                          {activity.lastEvent})
                                         </Box>
                                       </Tooltip>
                                     ) : (
-                                      <Box display="flex" alignItems="center" gap={1}>
-                                        <Schedule fontSize="small" color="disabled" />
+                                      <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={1}
+                                      >
+                                        <Schedule
+                                          fontSize="small"
+                                          color="disabled"
+                                        />
                                         {activity.lastOut}
                                       </Box>
                                     )
                                   ) : (
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
+                                      -
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                {/* Out Image */}
+                                <TableCell sx={{ py: 1 }}>
+                                  {activity.type === "attendance" &&
+                                  activity.outImage ? (
+                                    <Box
+                                      component="a"
+                                      href={activity.outImage}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      sx={{ display: "inline-block" }}
+                                    >
+                                      <Box
+                                        component="img"
+                                        src={activity.outImage}
+                                        alt="Out"
+                                        sx={{
+                                          width: 45,
+                                          height: 45,
+                                          objectFit: "cover",
+                                          borderRadius: 1,
+                                          border: "1px solid #ddd",
+                                          cursor: "pointer",
+                                        }}
+                                      />
+                                    </Box>
+                                  ) : (
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
                                       -
                                     </Typography>
                                   )}
@@ -1536,12 +1800,24 @@ const fetchTodayAttendance = async (date = new Date()) => {
 
                                 <TableCell sx={{ py: 1 }}>
                                   {activity.type === "attendance" ? (
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                      <AccessTime fontSize="small" color="info" />
-                                      <Typography fontWeight={500}>{activity.workingHours}</Typography>
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      <AccessTime
+                                        fontSize="small"
+                                        color="info"
+                                      />
+                                      <Typography fontWeight={500}>
+                                        {activity.workingHours}
+                                      </Typography>
                                     </Box>
                                   ) : (
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
                                       -
                                     </Typography>
                                   )}
@@ -1550,11 +1826,17 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                 <TableCell sx={{ py: 1 }}>
                                   {activity.type === "attendance" ? (
                                     <AttendanceStatusChip
-                                      status={activity.color === "green" ? "on-time" : "late"}
+                                      status={
+                                        activity.color === "green"
+                                          ? "on-time"
+                                          : "late"
+                                      }
                                       time=""
                                     />
                                   ) : (
-                                    <AttendanceStatusChip status={activity.type} />
+                                    <AttendanceStatusChip
+                                      status={activity.type}
+                                    />
                                   )}
                                 </TableCell>
                               </TableRow>
@@ -1585,79 +1867,113 @@ const fetchTodayAttendance = async (date = new Date()) => {
         ) : (
           <>
             {/* Today's Attendance View */}
-<Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
-  <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={2}>
-      <Typography variant="h6" sx={{ fontWeight: 500 }}>
-        Daily Attendance - {format(selectedDate, "dd/MM/yyyy")}
-      </Typography>
-      
-      <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label="Select Date"
-            value={selectedDate}
-            onChange={(newDate) => {
-              setSelectedDate(newDate)
-              fetchTodayAttendance(newDate)
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                sx={{ width: 150 }}
-              />
-            )}
-          />
-        </LocalizationProvider>
-        
-        <Button
-          variant={isToday(selectedDate) ? "contained" : "outlined"}
-          size="small"
-          onClick={() => {
-            const today = new Date()
-            setSelectedDate(today)
-            fetchTodayAttendance(today)
-          }}
-          startIcon={<Today />}
-        >
-          Today
-        </Button>
-        
-        <Box display="flex" alignItems="center" gap={1}>
-          <Groups color="primary" />
-          <Typography variant="body2" color="text.secondary">
-            Total: {todayAttendance.length} employees
-          </Typography>
-        </Box>
-      </Box>
-    </Box>
+            <Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
+              <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
+                  flexWrap="wrap"
+                  gap={2}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                    Daily Attendance - {format(selectedDate, "dd/MM/yyyy")}
+                  </Typography>
+
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                    flexWrap="wrap"
+                  >
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        label="Select Date"
+                        value={selectedDate}
+                        onChange={(newDate) => {
+                          setSelectedDate(newDate);
+                          fetchTodayAttendance(newDate);
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            size="small"
+                            sx={{ width: 150 }}
+                          />
+                        )}
+                      />
+                    </LocalizationProvider>
+
+                    <Button
+                      variant={isToday(selectedDate) ? "contained" : "outlined"}
+                      size="small"
+                      onClick={() => {
+                        const today = new Date();
+                        setSelectedDate(today);
+                        fetchTodayAttendance(today);
+                      }}
+                      startIcon={<Today />}
+                    >
+                      Today
+                    </Button>
+
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Groups color="primary" />
+                      <Typography variant="body2" color="text.secondary">
+                        Total: {todayAttendance.length} employees
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
 
                 {/* Today's Summary Cards */}
                 <Grid container spacing={1} sx={{ mb: 3 }}>
                   <Grid item xs={6} sm={3}>
                     <Card
                       sx={{
-                        background: "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
+                        background:
+                          "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
                         p: 1,
                         borderRadius: 2,
                         boxShadow: 1,
                       }}
                     >
                       <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                        >
                           <Box>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               Present
                             </Typography>
-                            <Typography variant="h6" fontWeight="bold" color="success.main">
+                            <Typography
+                              variant="h6"
+                              fontWeight="bold"
+                              color="success.main"
+                            >
                               {presentCount}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {todayAttendance.length > 0 ? `${((presentCount / todayAttendance.length) * 100).toFixed(1)}%` : "0%"}
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {todayAttendance.length > 0
+                                ? `${(
+                                    (presentCount / todayAttendance.length) *
+                                    100
+                                  ).toFixed(1)}%`
+                                : "0%"}
                             </Typography>
                           </Box>
-                          <AccessTime sx={{ fontSize: 24, color: "success.main" }} />
+                          <AccessTime
+                            sx={{ fontSize: 24, color: "success.main" }}
+                          />
                         </Box>
                       </CardContent>
                     </Card>
@@ -1666,26 +1982,48 @@ const fetchTodayAttendance = async (date = new Date()) => {
                   <Grid item xs={6} sm={3}>
                     <Card
                       sx={{
-                        background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
+                        background:
+                          "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
                         p: 1,
                         borderRadius: 2,
                         boxShadow: 1,
                       }}
                     >
                       <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                        >
                           <Box>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               Absent
                             </Typography>
-                            <Typography variant="h6" fontWeight="bold" color="error.main">
+                            <Typography
+                              variant="h6"
+                              fontWeight="bold"
+                              color="error.main"
+                            >
                               {absentCount}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {todayAttendance.length > 0 ? `${((absentCount / todayAttendance.length) * 100).toFixed(1)}%` : "0%"}
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {todayAttendance.length > 0
+                                ? `${(
+                                    (absentCount / todayAttendance.length) *
+                                    100
+                                  ).toFixed(1)}%`
+                                : "0%"}
                             </Typography>
                           </Box>
-                          <Schedule sx={{ fontSize: 24, color: "error.main" }} />
+                          <Schedule
+                            sx={{ fontSize: 24, color: "error.main" }}
+                          />
                         </Box>
                       </CardContent>
                     </Card>
@@ -1694,26 +2032,39 @@ const fetchTodayAttendance = async (date = new Date()) => {
                   <Grid item xs={6} sm={3}>
                     <Card
                       sx={{
-                        background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                        background:
+                          "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
                         p: 1,
                         borderRadius: 2,
                         boxShadow: 1,
                       }}
                     >
                       <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                        >
                           <Box>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               Checked In
                             </Typography>
                             <Typography variant="h6" fontWeight="bold">
                               {presentCount}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               Employees
                             </Typography>
                           </Box>
-                          <Person sx={{ fontSize: 24, color: "primary.main" }} />
+                          <Person
+                            sx={{ fontSize: 24, color: "primary.main" }}
+                          />
                         </Box>
                       </CardContent>
                     </Card>
@@ -1722,22 +2073,37 @@ const fetchTodayAttendance = async (date = new Date()) => {
                   <Grid item xs={6} sm={3}>
                     <Card
                       sx={{
-                        background: "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
+                        background:
+                          "linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)",
                         p: 1,
                         borderRadius: 2,
                         boxShadow: 1,
                       }}
                     >
                       <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                        >
                           <Box>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               Pending
                             </Typography>
-                            <Typography variant="h6" fontWeight="bold" color="warning.main">
+                            <Typography
+                              variant="h6"
+                              fontWeight="bold"
+                              color="warning.main"
+                            >
                               {absentCount}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               To Check In
                             </Typography>
                           </Box>
@@ -1752,8 +2118,14 @@ const fetchTodayAttendance = async (date = new Date()) => {
 
                 {todayAttendance.length === 0 ? (
                   <Box sx={{ textAlign: "center", py: 6 }}>
-                    <Today sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-                    <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                    <Today
+                      sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
+                    />
+                    <Typography
+                      variant="subtitle1"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       No attendance records for today
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -1763,12 +2135,15 @@ const fetchTodayAttendance = async (date = new Date()) => {
                 ) : isMobile ? (
                   <Stack spacing={1}>
                     {todayAttendance
-                      .slice(todayPage * todayRowsPerPage, todayPage * todayRowsPerPage + todayRowsPerPage)
+                      .slice(
+                        todayPage * todayRowsPerPage,
+                        todayPage * todayRowsPerPage + todayRowsPerPage
+                      )
                       .map((attendance, index) => (
-                        <TodayAttendanceCard 
-                          key={index} 
-                          attendance={attendance} 
-                          isMobile={isMobile} 
+                        <TodayAttendanceCard
+                          key={index}
+                          attendance={attendance}
+                          isMobile={isMobile}
                           employees={employees}
                         />
                       ))}
@@ -1777,47 +2152,86 @@ const fetchTodayAttendance = async (date = new Date()) => {
                   <TableContainer sx={{ borderRadius: 2 }}>
                     <Table>
                       <TableHead>
-                        <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                          {["Employee", "Check In", "Check Out", "Working Hours", "Status", "Actions"].map(
-                            (head) => (
-                              <TableCell
-                                key={head}
-                                sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
-                              >
-                                {head}
-                              </TableCell>
-                            )
-                          )}
+                        <TableRow
+                          sx={{ backgroundColor: theme.palette.primary.main }}
+                        >
+                          {[
+                            "Employee",
+                            "Check In",
+                            "Check Out",
+                            "Working Hours",
+                            "Status",
+                            "Actions",
+                          ].map((head) => (
+                            <TableCell
+                              key={head}
+                              sx={{ color: "#fff", fontWeight: 600, py: 1.2 }}
+                            >
+                              {head}
+                            </TableCell>
+                          ))}
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {todayAttendance
-                          .slice(todayPage * todayRowsPerPage, todayPage * todayRowsPerPage + todayRowsPerPage)
+                          .slice(
+                            todayPage * todayRowsPerPage,
+                            todayPage * todayRowsPerPage + todayRowsPerPage
+                          )
                           .map((attendance, index) => {
-                            const employee = employees.find(emp => emp.EmpId === attendance.EmpId) || {}
-                            const status = attendance.FirstIn === "N/A" || !attendance.FirstIn ? "absent" : "present"
-                            
+                            const employee =
+                              employees.find(
+                                (emp) => emp.EmpId === attendance.EmpId
+                              ) || {};
+                            const status =
+                              attendance.FirstIn === "N/A" ||
+                              !attendance.FirstIn
+                                ? "absent"
+                                : "present";
+
                             return (
                               <TableRow
                                 key={index}
                                 sx={{
-                                  "&:hover": { backgroundColor: theme.palette.action.hover },
+                                  "&:hover": {
+                                    backgroundColor: theme.palette.action.hover,
+                                  },
                                   borderLeft: `4px solid ${
-                                    status === "present" ? theme.palette.success.main : theme.palette.error.main
+                                    status === "present"
+                                      ? theme.palette.success.main
+                                      : theme.palette.error.main
                                   }`,
                                   transition: "background 0.3s",
                                 }}
                               >
                                 <TableCell sx={{ py: 1 }}>
-                                  <Box display="flex" alignItems="center" gap={1}>
-                                    <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
-                                      {employee.Name ? employee.Name.charAt(0).toUpperCase() : attendance.EmpId.charAt(0)}
+                                  <Box
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={1}
+                                  >
+                                    <Avatar
+                                      sx={{
+                                        width: 32,
+                                        height: 32,
+                                        bgcolor: theme.palette.primary.main,
+                                      }}
+                                    >
+                                      {employee.Name
+                                        ? employee.Name.charAt(0).toUpperCase()
+                                        : attendance.EmpId.charAt(0)}
                                     </Avatar>
                                     <Box>
-                                      <Typography variant="body2" fontWeight="medium">
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight="medium"
+                                      >
                                         {employee.Name || attendance.EmpId}
                                       </Typography>
-                                      <Typography variant="caption" color="text.secondary">
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                      >
                                         {attendance.EmpId}
                                       </Typography>
                                     </Box>
@@ -1825,10 +2239,16 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                 </TableCell>
 
                                 <TableCell sx={{ py: 1 }}>
-                                  <Tooltip title={`Location: ${attendance.FirstInLocation || "N/A"}`}>
+                                  <Tooltip
+                                    title={`Location: ${
+                                      attendance.FirstInLocation || "N/A"
+                                    }`}
+                                  >
                                     <Box
                                       component="a"
-                                      href={generateMapUrl(attendance.FirstInLocation)}
+                                      href={generateMapUrl(
+                                        attendance.FirstInLocation
+                                      )}
                                       target="_blank"
                                       sx={{
                                         textDecoration: "none",
@@ -1836,21 +2256,28 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                         display: "flex",
                                         alignItems: "center",
                                         gap: 1,
-                                        "&:hover": { textDecoration: "underline" },
+                                        "&:hover": {
+                                          textDecoration: "underline",
+                                        },
                                       }}
                                     >
                                       <LocationOn fontSize="small" />
-                                      {attendance.FirstIn} ({attendance.FirstEvent})
+                                      {attendance.FirstIn} (
+                                      {attendance.FirstEvent})
                                     </Box>
                                   </Tooltip>
                                 </TableCell>
 
                                 <TableCell sx={{ py: 1 }}>
                                   {attendance.LastOutLocation !== "N/A" ? (
-                                    <Tooltip title={`Location: ${attendance.LastOutLocation}`}>
+                                    <Tooltip
+                                      title={`Location: ${attendance.LastOutLocation}`}
+                                    >
                                       <Box
                                         component="a"
-                                        href={generateMapUrl(attendance.LastOutLocation)}
+                                        href={generateMapUrl(
+                                          attendance.LastOutLocation
+                                        )}
                                         target="_blank"
                                         sx={{
                                           textDecoration: "none",
@@ -1858,32 +2285,52 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                           display: "flex",
                                           alignItems: "center",
                                           gap: 1,
-                                          "&:hover": { textDecoration: "underline" },
+                                          "&:hover": {
+                                            textDecoration: "underline",
+                                          },
                                         }}
                                       >
                                         <LocationOn fontSize="small" />
-                                        {attendance.LastOut} ({attendance.LastEvent})
+                                        {attendance.LastOut} (
+                                        {attendance.LastEvent})
                                       </Box>
                                     </Tooltip>
                                   ) : (
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                      <Schedule fontSize="small" color="disabled" />
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={1}
+                                    >
+                                      <Schedule
+                                        fontSize="small"
+                                        color="disabled"
+                                      />
                                       {attendance.LastOut}
                                     </Box>
                                   )}
                                 </TableCell>
 
                                 <TableCell sx={{ py: 1 }}>
-                                  <Box display="flex" alignItems="center" gap={1}>
+                                  <Box
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={1}
+                                  >
                                     <AccessTime fontSize="small" color="info" />
-                                    <Typography fontWeight={500}>{attendance.WorkingHours}</Typography>
+                                    <Typography fontWeight={500}>
+                                      {attendance.WorkingHours}
+                                    </Typography>
                                   </Box>
                                 </TableCell>
 
                                 <TableCell sx={{ py: 1 }}>
                                   <AttendanceStatusChip
                                     status={status}
-                                    time={attendance.FirstIn !== "N/A" ? attendance.FirstIn : ""}
+                                    time={
+                                      attendance.FirstIn !== "N/A"
+                                        ? attendance.FirstIn
+                                        : ""
+                                    }
                                   />
                                 </TableCell>
 
@@ -1892,16 +2339,20 @@ const fetchTodayAttendance = async (date = new Date()) => {
                                     <IconButton
                                       size="small"
                                       component="a"
-                                      href={generateMapUrl(attendance.FirstInLocation)}
+                                      href={generateMapUrl(
+                                        attendance.FirstInLocation
+                                      )}
                                       target="_blank"
-                                      disabled={attendance.FirstInLocation === "N/A"}
+                                      disabled={
+                                        attendance.FirstInLocation === "N/A"
+                                      }
                                     >
                                       <LocationOn fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
                                 </TableCell>
                               </TableRow>
-                            )
+                            );
                           })}
                       </TableBody>
                     </Table>
@@ -1917,7 +2368,9 @@ const fetchTodayAttendance = async (date = new Date()) => {
                     page={todayPage}
                     onPageChange={(event, newPage) => setTodayPage(newPage)}
                     onRowsPerPageChange={(event) => {
-                      setTodayRowsPerPage(Number.parseInt(event.target.value, 10));
+                      setTodayRowsPerPage(
+                        Number.parseInt(event.target.value, 10)
+                      );
                       setTodayPage(0);
                     }}
                   />
@@ -1928,7 +2381,7 @@ const fetchTodayAttendance = async (date = new Date()) => {
         )}
       </Box>
     </Box>
-  )
+  );
 }
 
 export default AttendanceList
