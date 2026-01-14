@@ -282,9 +282,9 @@ function PaymentList() {
                     }
                   >
                     <td>{nameEntry?.Value || "-"}</td>
-                    
+
                     <td>
-                      {record.PaymentReceived === 0 && empId === "NI003" ? (
+                      {record.PaymentReceived === 0 && empId === "NIOF004" ? (
                         <button
                           className="mark-payment-button"
                           onClick={(e) => {
@@ -295,9 +295,7 @@ function PaymentList() {
                           Mark Payment Complete
                         </button>
                       ) : record.PaymentReceived === 1 ? (
-                        <span className="payment-received">
-                          Payment Received
-                        </span>
+                        <span className="payment-received">Received</span>
                       ) : (
                         <span>-</span>
                       )}
