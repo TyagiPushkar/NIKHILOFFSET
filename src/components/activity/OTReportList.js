@@ -67,6 +67,50 @@ const formatTimeDisplay = (timeStr) => {
   return `${hours}:${minutes}`;
 };
 
+// NEW: Helper function to check if a date is Sunday
+const isSunday = (dateString) => {
+  if (!dateString) return false;
+
+  // Parse the date string (assuming format is YYYY-MM-DD or similar)
+  const date = new Date(dateString);
+
+  // Check if the date is valid
+  if (isNaN(date.getTime())) return false;
+
+  // getDay() returns 0 for Sunday, 1 for Monday, etc.
+  return date.getDay() === 0;
+};
+
+// NEW: Calculate working hours and OT for Sunday
+const calculateSundayHours = (workingHours, currentOT, inDate) => {
+  if (isSunday(inDate)) {
+    // If it's Sunday, all working hours become OT
+    // Working hours should be 00:00:00
+    // OT should be the original working hours + any existing OT
+    const totalOT = addTimes(
+      workingHours || "00:00:00",
+      currentOT || "00:00:00",
+    );
+
+    return {
+      working_hours: "00:00:00", // Working hours is 0 on Sunday
+      ot: totalOT, // All hours go to OT
+      total_hours: totalOT, // Total hours = OT hours (since working is 0)
+    };
+  }
+
+  // For non-Sunday days, keep original values
+  const totalHours = addTimes(
+    workingHours || "00:00:00",
+    currentOT || "00:00:00",
+  );
+  return {
+    working_hours: workingHours || "00:00:00",
+    ot: currentOT || "00:00:00",
+    total_hours: totalHours,
+  };
+};
+
 const OTReportList = () => {
   // State management
   const [state, setState] = useState({
@@ -131,7 +175,7 @@ const OTReportList = () => {
 
     if (state.selectedEmployee && state.selectedEmployee !== "all") {
       const emp = state.employees.find(
-        (e) => e.EmpId === state.selectedEmployee
+        (e) => e.EmpId === state.selectedEmployee,
       );
       filters.push(`Employee: ${emp?.Name || state.selectedEmployee}`);
     }
@@ -157,10 +201,30 @@ const OTReportList = () => {
       const data = await response.json();
 
       if (data.success) {
+        // Process data to calculate Sunday OT
+        const processedData = (data.data || []).map((record) => {
+          // Calculate adjusted hours considering Sunday
+          const adjustedHours = calculateSundayHours(
+            record.working_hours,
+            record.ot,
+            record.in_date,
+          );
+
+          return {
+            ...record,
+            // Override with adjusted values
+            working_hours: adjustedHours.working_hours,
+            ot: adjustedHours.ot,
+            total_hours: adjustedHours.total_hours,
+            // Flag to indicate if it's Sunday
+            is_sunday: isSunday(record.in_date),
+          };
+        });
+
         setState((prev) => ({
           ...prev,
-          attendanceRecords: data.data || [],
-          totalRecords: data.totalRecords || data.data?.length || 0,
+          attendanceRecords: processedData,
+          totalRecords: data.totalRecords || processedData.length || 0,
           loading: false,
           error: "",
         }));
@@ -203,7 +267,7 @@ const OTReportList = () => {
     }
   }, []);
 
-  // Calculate OT summary
+  // Calculate OT summary (UPDATED for Sunday logic)
   const otSummary = useMemo(() => {
     const summary = {
       totalRecords: state.attendanceRecords.length,
@@ -215,17 +279,32 @@ const OTReportList = () => {
       totalOTFormatted: "00:00:00",
       totalWorkingFormatted: "00:00:00",
       totalCombinedFormatted: "00:00:00",
+      // NEW: Track Sunday-specific data
+      sundayRecords: 0,
+      sundayOTHours: 0,
+      sundayOTFormatted: "00:00:00",
+      // NEW: Track regular working days
+      regularRecords: 0,
+      regularWorkingHours: 0,
+      regularWorkingFormatted: "00:00:00",
     };
 
     let maxOTHours = 0;
 
     state.attendanceRecords.forEach((record) => {
-      // Parse working hours
+      // Parse working hours (already adjusted for Sunday)
       if (record.working_hours && record.working_hours !== "00:00:00") {
         const [wHours, wMinutes, wSeconds] = record.working_hours
           .split(":")
           .map(Number);
         summary.totalWorkingHours += wHours * 3600 + wMinutes * 60 + wSeconds;
+
+        // Track regular working hours (non-Sunday)
+        if (!record.is_sunday) {
+          summary.regularWorkingHours +=
+            wHours * 3600 + wMinutes * 60 + wSeconds;
+          summary.regularRecords++;
+        }
       }
 
       // Parse OT hours
@@ -241,6 +320,12 @@ const OTReportList = () => {
           maxOTHours = totalSeconds;
           summary.maxOT = record.ot;
         }
+
+        // NEW: Track Sunday OT separately
+        if (record.is_sunday) {
+          summary.sundayRecords++;
+          summary.sundayOTHours += totalSeconds;
+        }
       }
     });
 
@@ -255,15 +340,19 @@ const OTReportList = () => {
     };
 
     summary.totalWorkingFormatted = formatSecondsToTime(
-      summary.totalWorkingHours
+      summary.totalWorkingHours,
     );
     summary.totalOTFormatted = formatSecondsToTime(summary.totalOTHours);
+    summary.sundayOTFormatted = formatSecondsToTime(summary.sundayOTHours);
+    summary.regularWorkingFormatted = formatSecondsToTime(
+      summary.regularWorkingHours,
+    );
 
     // Calculate combined total
     summary.totalCombinedHours =
       summary.totalWorkingHours + summary.totalOTHours;
     summary.totalCombinedFormatted = formatSecondsToTime(
-      summary.totalCombinedHours
+      summary.totalCombinedHours,
     );
 
     summary.employeesWithOTCount = summary.employeesWithOT.size;
@@ -345,38 +434,61 @@ const OTReportList = () => {
     }
   };
 
-    const formatDate1 = (datetime) => {
-      if (!datetime) return "-";
-      const dateObj = new Date(datetime);
-      const day = String(dateObj.getDate()).padStart(2, "0");
-      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-      const year = dateObj.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
+  const formatDate1 = (datetime) => {
+    if (!datetime) return "-";
+    const dateObj = new Date(datetime);
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Get day name from date
+  const getDayName = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    return days[date.getDay()];
+  };
+
   const exportToCSV = () => {
     const headers = [
       "Employee ID",
       "Employee Name",
       "Date",
+      "Day",
       "In Time",
       "Out Time",
       "Working Hours",
       "OT Hours",
       "Total Hours",
+      "Remarks",
     ];
     const csvContent = [
       headers.join(","),
       ...state.attendanceRecords.map((record) => {
-        const totalHours = addTimes(record.working_hours, record.ot);
+        const dayName = getDayName(record.in_date);
+        const isSunday = record.is_sunday;
+
         return [
           record.emp_id,
           `"${record.employee_name}"`,
           record.in_date,
+          dayName,
           record.in_time,
           record.out_time,
           record.working_hours,
           record.ot,
-          totalHours,
+          record.total_hours,
+          isSunday ? "Sunday - All hours counted as OT" : "Regular Day",
         ].join(",");
       }),
     ].join("\n");
@@ -398,7 +510,8 @@ const OTReportList = () => {
       (record) =>
         record.employee_name?.toLowerCase().includes(term) ||
         record.emp_id?.toLowerCase().includes(term) ||
-        record.in_date?.toLowerCase().includes(term)
+        record.in_date?.toLowerCase().includes(term) ||
+        getDayName(record.in_date).toLowerCase().includes(term),
     );
   }, [state.attendanceRecords, state.searchTerm]);
 
@@ -442,6 +555,14 @@ const OTReportList = () => {
       >
         <Typography variant="h5" fontWeight="bold" color="#333">
           OT Report List
+          <Typography
+            variant="caption"
+            display="block"
+            color="error"
+            fontWeight="bold"
+          >
+            Note: Sunday working hours are counted as OT
+          </Typography>
         </Typography>
         <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
           <Button
@@ -494,7 +615,118 @@ const OTReportList = () => {
       )}
 
       {/* Summary Cards */}
-     
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper
+            elevation={2}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              borderLeft: "4px solid #344C7D",
+            }}
+          >
+            <Typography variant="subtitle2" color="textSecondary">
+              Total Records
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" color="#333">
+              {otSummary.totalRecords}
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper
+            elevation={2}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              borderLeft: "4px solid #1976d2",
+            }}
+          >
+            <Typography variant="subtitle2" color="textSecondary">
+              Total OT Hours
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" color="#1976d2">
+              {formatTimeDisplay(otSummary.totalOTFormatted)}
+            </Typography>
+            {otSummary.sundayRecords > 0 && (
+              <Typography variant="caption" color="error">
+                ({otSummary.sundayRecords} Sundays)
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper
+            elevation={2}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              borderLeft: "4px solid #388e3c",
+            }}
+          >
+            <Typography variant="subtitle2" color="textSecondary">
+              Working Hours
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" color="#388e3c">
+              {formatTimeDisplay(otSummary.regularWorkingFormatted)}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              ({otSummary.regularRecords} regular days)
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper
+            elevation={2}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              borderLeft: "4px solid #d32f2f",
+            }}
+          >
+            <Typography variant="subtitle2" color="textSecondary">
+              Sunday OT Hours
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" color="#d32f2f">
+              {formatTimeDisplay(otSummary.sundayOTFormatted)}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              ({otSummary.sundayRecords} Sundays)
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper
+            elevation={2}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              borderLeft: "4px solid #f57c00",
+            }}
+          >
+            <Typography variant="subtitle2" color="textSecondary">
+              Employees with OT
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" color="#f57c00">
+              {otSummary.employeesWithOTCount}
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Sunday OT Notice */}
+      {otSummary.sundayRecords > 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="body2" fontWeight="bold">
+            Sunday OT Policy Applied:
+          </Typography>
+          <Typography variant="body2">
+            For {otSummary.sundayRecords} Sunday record(s), all working hours
+            have been counted as OT. Working hours are shown as 00:00 and total
+            hours equal OT hours for Sunday entries.
+          </Typography>
+        </Alert>
+      )}
 
       {/* Filters Section */}
       <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -524,7 +756,7 @@ const OTReportList = () => {
                 state.selectedEmployee === "all"
                   ? { EmpId: "all", Name: "All Employees" }
                   : state.employees.find(
-                      (emp) => emp.EmpId === state.selectedEmployee
+                      (emp) => emp.EmpId === state.selectedEmployee,
                     ) || null
               }
               onChange={(event, newValue) => {
@@ -597,6 +829,22 @@ const OTReportList = () => {
         </Alert>
       )}
 
+      {/* Search Bar */}
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Search by employee name, ID, date, or day..."
+        value={state.searchTerm}
+        onChange={handleSearch}
+        size="small"
+        sx={{ mb: 3 }}
+        InputProps={{
+          startAdornment: (
+            <Search size={20} style={{ marginRight: "8px", color: "#999" }} />
+          ),
+        }}
+      />
+
       {/* OT Report Table */}
       <TableContainer
         component={Paper}
@@ -617,13 +865,13 @@ const OTReportList = () => {
                 Employee Name
               </TableCell>
               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                In Date
+                Date
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                Day
               </TableCell>
               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                 In Time
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                Out Date
               </TableCell>
               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                 Out Time
@@ -634,9 +882,9 @@ const OTReportList = () => {
               <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                 OT Hours
               </TableCell>
-              {/* <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                 Total Hours
-              </TableCell> */}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -654,11 +902,11 @@ const OTReportList = () => {
               searchedRecords
                 .slice(
                   state.page * state.rowsPerPage,
-                  state.page * state.rowsPerPage + state.rowsPerPage
+                  state.page * state.rowsPerPage + state.rowsPerPage,
                 )
                 .map((record) => {
-                  const totalHours = addTimes(record.working_hours, record.ot);
-                  const hasOT = record.ot !== "00:00:00";
+                  const isSunday = record.is_sunday;
+                  const dayName = getDayName(record.in_date);
 
                   return (
                     <TableRow
@@ -666,10 +914,12 @@ const OTReportList = () => {
                       hover
                       sx={{
                         "&:hover": {
-                          backgroundColor: "rgba(246, 147, 32, 0.04)",
+                          backgroundColor: isSunday
+                            ? "rgba(255, 235, 238, 0.5)"
+                            : "rgba(246, 147, 32, 0.04)",
                         },
-                        backgroundColor: hasOT
-                          ? "rgba(255, 245, 235, 0.5)"
+                        backgroundColor: isSunday
+                          ? "rgba(255, 235, 238, 0.3)"
                           : "inherit",
                       }}
                     >
@@ -680,42 +930,89 @@ const OTReportList = () => {
                       </TableCell>
                       <TableCell>{record.employee_name}</TableCell>
                       <TableCell>{formatDate1(record.in_date)}</TableCell>
-                      <TableCell>{record.in_time}</TableCell>
-                      <TableCell>{formatDate1(record.out_date)}</TableCell>
-                      <TableCell>{record.out_time}</TableCell>
-                      <TableCell>{formatTimeDisplay(totalHours)}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={dayName}
+                          size="small"
+                          color={isSunday ? "error" : "default"}
+                          variant={isSunday ? "filled" : "outlined"}
+                          sx={{
+                            fontWeight: isSunday ? "bold" : "normal",
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>{record.in_time || "-"}</TableCell>
+                      <TableCell>{record.out_time || "-"}</TableCell>
                       <TableCell>
                         <Typography
                           variant="body2"
                           sx={{
-                            color: hasOT ? "#d32f2f" : "text.secondary",
-                            bgcolor: hasOT ? "#ffebee" : "transparent",
+                            color: isSunday ? "#999" : "inherit",
+                            fontStyle: isSunday ? "italic" : "normal",
+                          }}
+                        >
+                          {formatTimeDisplay(record.working_hours)}
+                          {isSunday && (
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              sx={{ ml: 0.5, color: "#d32f2f" }}
+                            >
+                              (Sunday)
+                            </Typography>
+                          )}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: isSunday ? "#d32f2f" : "#f57c00",
+                            bgcolor: isSunday ? "#ffebee" : "#fff3e0",
                             px: 1,
                             py: 0.5,
                             borderRadius: 1,
                             display: "inline-block",
-                            fontWeight: hasOT ? "bold" : "normal",
+                            fontWeight: "bold",
                           }}
                         >
                           {formatTimeDisplay(record.ot)}
+                          {isSunday && (
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              sx={{ ml: 1, color: "#d32f2f" }}
+                            >
+                              (Full Day OT)
+                            </Typography>
+                          )}
                         </Typography>
                       </TableCell>
-                      {/* <TableCell>
+                      <TableCell>
                         <Typography
                           variant="body2"
                           fontWeight="bold"
                           sx={{
-                            color: "#1976d2",
-                            bgcolor: "#e3f2fd",
+                            color: isSunday ? "#d32f2f" : "#1976d2",
+                            bgcolor: isSunday ? "#ffebee" : "#e3f2fd",
                             px: 1,
                             py: 0.5,
                             borderRadius: 1,
                             display: "inline-block",
                           }}
                         >
-                          {formatTimeDisplay(totalHours)}
+                          {formatTimeDisplay(record.total_hours)}
+                          {isSunday && record.ot !== "00:00:00" && (
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              sx={{ ml: 0.5, color: "#d32f2f" }}
+                            >
+                              = OT Hours
+                            </Typography>
+                          )}
                         </Typography>
-                      </TableCell> */}
+                      </TableCell>
                     </TableRow>
                   );
                 })
