@@ -81,36 +81,38 @@ const isSunday = (dateString) => {
   return date.getDay() === 0;
 };
 
-// NEW: Calculate working hours and OT for Sunday
+// Helper function to calculate working hours and OT for Sunday
 const calculateSundayHours = (workingHours, currentOT, inDate) => {
   if (isSunday(inDate)) {
-    // If it's Sunday, all working hours become OT
-    // Working hours should be 00:00:00
-    // OT should be the original working hours + any existing OT
-    const totalOT = addTimes(
-      workingHours || "00:00:00",
-      currentOT || "00:00:00",
-    );
+    // On Sunday, working hours remain visible (for double pay calculation)
+    // but also all working hours are counted as OT
+    const workingTime = workingHours || "00:00:00";
+    const existingOT = currentOT || "00:00:00";
+    
+    // All working hours become additional OT on Sunday
+    const totalOT = addTimes(workingTime, existingOT);
 
     return {
-      working_hours: "00:00:00", // Working hours is 0 on Sunday
-      ot: totalOT, // All hours go to OT
-      total_hours: totalOT, // Total hours = OT hours (since working is 0)
+      working_hours: workingTime, // Keep working hours visible for double pay
+      ot: totalOT, // All hours (including working) go to OT
+      total_hours: totalOT, // Total hours = OT hours
+      is_sunday: true,
+      display_working_hours: workingTime // Keep for display
     };
   }
 
   // For non-Sunday days, keep original values
-  const totalHours = addTimes(
-    workingHours || "00:00:00",
-    currentOT || "00:00:00",
-  );
+  const working = workingHours || "00:00:00";
+  const overtime = currentOT || "00:00:00";
+  const totalHours = addTimes(working, overtime);
+  
   return {
-    working_hours: workingHours || "00:00:00",
-    ot: currentOT || "00:00:00",
+    working_hours: working,
+    ot: overtime,
     total_hours: totalHours,
+    is_sunday: false
   };
 };
-
 const OTReportList = () => {
   // State management
   const [state, setState] = useState({
@@ -614,105 +616,7 @@ const OTReportList = () => {
         </Box>
       )}
 
-      {/* Summary Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              borderLeft: "4px solid #344C7D",
-            }}
-          >
-            <Typography variant="subtitle2" color="textSecondary">
-              Total Records
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" color="#333">
-              {otSummary.totalRecords}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              borderLeft: "4px solid #1976d2",
-            }}
-          >
-            <Typography variant="subtitle2" color="textSecondary">
-              Total OT Hours
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" color="#1976d2">
-              {formatTimeDisplay(otSummary.totalOTFormatted)}
-            </Typography>
-            {otSummary.sundayRecords > 0 && (
-              <Typography variant="caption" color="error">
-                ({otSummary.sundayRecords} Sundays)
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              borderLeft: "4px solid #388e3c",
-            }}
-          >
-            <Typography variant="subtitle2" color="textSecondary">
-              Working Hours
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" color="#388e3c">
-              {formatTimeDisplay(otSummary.regularWorkingFormatted)}
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              ({otSummary.regularRecords} regular days)
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              borderLeft: "4px solid #d32f2f",
-            }}
-          >
-            <Typography variant="subtitle2" color="textSecondary">
-              Sunday OT Hours
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" color="#d32f2f">
-              {formatTimeDisplay(otSummary.sundayOTFormatted)}
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              ({otSummary.sundayRecords} Sundays)
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              borderLeft: "4px solid #f57c00",
-            }}
-          >
-            <Typography variant="subtitle2" color="textSecondary">
-              Employees with OT
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" color="#f57c00">
-              {otSummary.employeesWithOTCount}
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      
 
       {/* Sunday OT Notice */}
       {otSummary.sundayRecords > 0 && (
@@ -947,8 +851,8 @@ const OTReportList = () => {
                         <Typography
                           variant="body2"
                           sx={{
-                            color: isSunday ? "#999" : "inherit",
-                            fontStyle: isSunday ? "italic" : "normal",
+                            color: isSunday ? "#d32f2f" : "inherit",
+                            fontWeight: isSunday ? "bold" : "normal",
                           }}
                         >
                           {formatTimeDisplay(record.working_hours)}
@@ -956,9 +860,13 @@ const OTReportList = () => {
                             <Typography
                               component="span"
                               variant="caption"
-                              sx={{ ml: 0.5, color: "#d32f2f" }}
+                              sx={{
+                                ml: 0.5,
+                                color: "#d32f2f",
+                                display: "block",
+                              }}
                             >
-                              (Sunday)
+                              (Double Pay)
                             </Typography>
                           )}
                         </Typography>
